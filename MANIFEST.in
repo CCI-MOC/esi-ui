@@ -1,0 +1,3 @@
+include setup.py
+
+recursive-include esi_ui *.js *.html *.scss
