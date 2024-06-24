@@ -1,0 +1,11 @@
+<div ng-controller="EsiController as ctrl">
+    <hz-dynamic-table
+      config="ctrl.config"
+      items="ctrl.nodes"
+      table="ctrl"
+      batch-actions="ctrl.batchActions"
+      item-actions="ctrl.itemActions"
+      filter-facets="ctrl.filterFacets"
+      result-handler="ctrl.resultHandler">
+    </hz-dynamic-table>
+</div>
