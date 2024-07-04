@@ -25,10 +25,10 @@ class Nodes(generic.View):
 @urls.register
 class StatesPower(generic.View):
 
-    url_regex = r'esi/nodes/(?P<node_id>{})/states/power$'.format(LOGICAL_NAME_PATTERN)
+    url_regex = r'esi/nodes/(?P<node>{})/states/power$'.format(LOGICAL_NAME_PATTERN)
 
     @rest_utils.ajax(data_required=True)
-    def put(self, request, node_id):
-        state = request.DATA.get('target')
-        return esi_api.set_power_state(request, node_id, state)
+    def put(self, request, node):
+        target = request.DATA.get('target')
+        return esi_api.set_power_state(request, node, target)
 

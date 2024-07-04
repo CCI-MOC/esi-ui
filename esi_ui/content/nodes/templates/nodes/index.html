@@ -12,11 +12,11 @@
 
 {% block page_header %}
   <hz-page-header
-    header="{$ 'Lessee View' | translate $}">
+    header="{$ 'Node Info' | translate $}">
   </hz-page-header>
 {% endblock page_header %}
 
 {% block main %}
-  <ng-include src="'{{ STATIC_URL }}dashboard/project/esi/esi.html'">
+  <ng-include src="'{{ STATIC_URL }}dashboard/project/esi/nodes.html'">
   </ng-include>
 {% endblock %}
