@@ -1,2 +1,2 @@
-esisdk
+esisdk>=0.4.0 # Apache-2.0
 horizon

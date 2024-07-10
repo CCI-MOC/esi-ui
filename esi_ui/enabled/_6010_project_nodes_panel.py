@@ -1,12 +1,12 @@
 # The name of the panel to be added to HORIZON_CONFIG. Required.
-PANEL = 'esi'
+PANEL = 'nodes'
 
 # The name of the dashboard the PANEL associated with. Required.
 PANEL_DASHBOARD = 'project'
 PANEL_GROUP = 'esi'
 
 # Python panel class of the PANEL to be added.
-ADD_PANEL = 'esi_ui.content.esi.panel.Nodes'
+ADD_PANEL = 'esi_ui.content.nodes.panel.Nodes'
 
 # A list of applications to be prepended to INSTALLED_APPS
 ADD_INSTALLED_APPS = ['esi_ui']

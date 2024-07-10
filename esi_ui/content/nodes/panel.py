@@ -4,4 +4,4 @@ import horizon
 
 class Nodes(horizon.Panel):
     name = _("Nodes")
-    slug = "esi"
+    slug = "nodes"
