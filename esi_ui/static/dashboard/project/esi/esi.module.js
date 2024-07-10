@@ -13,19 +13,22 @@
     $provide.constant('horizon.dashboard.project.esi.nodeConfig', {
       selectAll: true,
       expand: true,
-      trackId: 'uuid',
+      trackId: 'lease_uuid',
       columns: [
         {id: 'name', title: 'Name', priority: 1, sortDefault: true},
         {id: 'provision_state', title: 'Provision State', priority: 1},
         {id: 'power_state', title: 'Power State', priority: 1},
         {id: 'maintenance', title: 'Maintenance', priority: 1},
-        {id: 'uuid', title: 'UUID', priority: 1},
+        {id: 'status', title: 'Status', priority: 1},
       ],
       lease_details: [
         {id: 'lessee', title: 'Lessee', priority: 1},
         {id: 'owner', title: 'Owner', priority: 1},
         {id: 'resource_class', title: 'Resource Class', priority: 1},
+        {id: 'start_time', title: 'Start Time', priority: 1},
+        {id: 'end_time', title: 'End Time', priority: 1},
         {id: 'lease_uuid', title: 'Lease UUID', priority: 1},
+        {id: 'properties', title: 'Properties', priority: 1},
       ],
       network_details: [
         {id: 'mac_addresses', title: 'MAC Address', priority: 1},
@@ -44,13 +47,13 @@
       columns: [
         {id: 'resource', title: 'Resource', priority: 1, sortDefault: true},
         {id: 'resource_class', title: 'Resource Class', priority: 1},
-        {id: 'project', title: 'Project', priority: 1},
-        {id: 'start_time', title: 'Start Time', priority: 1},
-        {id: 'end_time', title: 'End Time', priority: 1},
-        {id: 'uuid', title: 'UUID', priority: 1},
+        {id: 'status', title: 'Status', priority: 1},
+        {id: 'start_time', title: 'Start Time (UTC)', priority: 1},
+        {id: 'end_time', title: 'End Time (UTC)', priority: 1},
+        {id: 'availabilities', title: 'Availabilities (UTC)', priority: 1},
       ],
       offer_details: [
-        {id: 'availabilities', title: 'Availabilities', priority: 1},
+        {id: 'uuid', title: 'UUID', priority: 1},
         {id: 'resource_properties', title: 'Resource Properties', priority: 1},
       ]
     });
@@ -99,6 +102,11 @@
       {
         label: gettext('Lease UUID'),
         name: 'lease_uuid',
+        singleton: true
+      },
+      {
+        label: gettext('Properties'),
+        name: 'properties',
         singleton: true
       },
       {

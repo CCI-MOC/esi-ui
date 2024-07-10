@@ -1,3 +1,6 @@
+import json
+import dateutil
+import pytz
 import concurrent.futures
 
 from django.conf import settings
@@ -45,31 +48,35 @@ def node_list(request):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             f1 = executor.submit(connection.lease.nodes)
             f2 = executor.submit(connection.baremetal.nodes, details=True)
+            f3 = executor.submit(connection.lease.leases)
             esi_nodes = list(f1.result())
             baremetal_nodes = list(f2.result())
+            leases = list(f3.result())
 
         list_of_nodes = []
-        for e in esi_nodes:
-            list_of_nodes.append((e, next((bm for bm in baremetal_nodes if e.id == bm.id), None)))
+        for lease in leases:
+            list_of_nodes.append((lease, next((e for e in esi_nodes if e.id == lease.resource_uuid), None),
+                                 next((bm for bm in baremetal_nodes if bm.id == lease.resource_uuid), None)))
 
         return [
             {
-                'uuid': e.id,
-                'name': e.name,
-                'maintenance': e.maintenance,
-                'provision_state': e.provision_state,
-                'target_provision_state': bm.target_provision_state,
-                'power_state': bm.power_state,
-                'target_power_state': bm.target_power_state,
-                'properties': e.properties,
-                'lease_uuid': e.lease_uuid,
-                'owner': e.owner,
-                'lessee': e.lessee,
-                'resource_class': e.resource_class,
-                'future_offers': e.future_offers,
-                'future_leases': e.future_leases,
+                'uuid': lease.resource_uuid,
+                'name': lease.resource,
+                'maintenance': e.maintenance if lease.status == 'active' else '',
+                'provision_state': e.provision_state if lease.status == 'active' else '',
+                'target_provision_state': bm.target_provision_state if lease.status == 'active' else '',
+                'power_state': bm.power_state if lease.status == 'active' else '',
+                'target_power_state': bm.target_power_state if lease.status == 'active' else '', 
+                'properties': [[key, value] for key, value in lease.resource_properties.items()],
+                'lease_uuid': lease.id,
+                'owner': lease.owner,
+                'lessee': e.lessee if lease.status == 'active' else '',
+                'resource_class': lease.resource_class,
+                'start_time': lease.start_time.replace('T', ' ', 1),
+                'end_time': lease.end_time.replace('T', ' ', 1),
+                'status': lease.status
             }
-            for e, bm in list_of_nodes if bm is not None
+            for lease, e, bm in list_of_nodes
         ]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -91,7 +98,7 @@ def node_list(request):
         node['fixed_ips'] = []
         node['floating_networks'] = []
         node['floating_ips'] = []
-        if network_info:
+        if node['status'] == 'active' and network_info:
             for info in network_info:
                 node['mac_addresses'].append(info['baremetal_port'].address)
                 node['network_port_names'].append(info['network_ports'][0].name
@@ -125,3 +132,41 @@ def set_power_state(request, node, target):
         target = target.split(' ', 1)[1]
 
     return esiclient(token=token).baremetal.wait_for_node_power_state(node=node, expected_state=target)
+
+
+def offer_list(request):
+    token = request.user.token.id
+
+    offers = esiclient(token=token).list_offers()
+
+    return [
+        {
+            'resource': offer.resource,
+            'resource_class': offer.resource_class,
+            'status': offer.status,
+            'start_time': offer.start_time.replace('T', ' ', 1),
+            'end_time': offer.end_time.replace('T', ' ', 1),
+            'uuid': offer.uuid,
+            'availabilities': [[avail[0].replace('T', ' ', 1), avail[1].replace('T', ' ', 1)] for avail in offer.availabilities],
+            'resource_properties': [[key, value] for key, value in offer.resource_properties.items()],
+        }
+        for offer in offers
+    ]
+
+
+def offer_claim(request, offer):
+    token = request.user.token.id
+    times = json.loads(request.body.decode('utf-8'))
+
+    if times['start_time'] is None:
+        del times['start_time']
+    if times['end_time'] is None:
+        del times['end_time']
+
+    return esiclient(token=token).claim_offer(offer, **times)
+
+
+def delete_lease(request, lease):
+    token = request.user.token.id
+
+    return esiclient(token=token).lease.delete_lease(lease)

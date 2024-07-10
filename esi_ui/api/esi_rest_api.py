@@ -32,3 +32,35 @@ class StatesPower(generic.View):
         target = request.DATA.get('target')
         return esi_api.set_power_state(request, node, target)
 
+
+@urls.register
+class Offers(generic.View):
+
+    url_regex = r'esi/offers/$'
+
+    @rest_utils.ajax()
+    def get(self, request):
+        offers = esi_api.offer_list(request)
+        return {
+            'offers': offers
+        }
+
+
+@urls.register
+class Offer(generic.View):
+
+    url_regex = r'esi/offers/(?P<offer>{})$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax(data_required=True)
+    def put(self, request, offer):
+        return esi_api.offer_claim(request, offer)
+
+
+@urls.register
+class Lease(generic.View):
+
+    url_regex = r'esi/lease/(?P<lease>{})$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def delete(self, request, lease):
+        return esi_api.delete_lease(request, lease)

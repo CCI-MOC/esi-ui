@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "ESI Lessee" %}{% endblock %}
+
+{% block breadcrumb_nav %}
+  <ol class="breadcrumb">
+    <li>{% trans "Project" %}</li>
+    <li>{% trans "ESI" %}</li>
+    <li>{% trans "Offers" %}</li>
+  </ol>
+{% endblock %}
+
+{% block page_header %}
+  <hz-page-header
+    header="{$ 'Offer Info' | translate $}">
+  </hz-page-header>
+{% endblock page_header %}
+
+{% block main %}
+  <ng-include src="'{{ STATIC_URL }}dashboard/project/esi/offers.html'">
+  </ng-include>
+{% endblock %}
