@@ -11,16 +11,6 @@
       <div class="hz-dynamic-table-preamble col-xs-12">
         <hz-magic-search-bar class="hz-magic-search-bar" ng-if="ctrl.filterFacets"></hz-magic-search-bar>
         <action-list>
-          <button class="btn btn-danger"
-                  ng-class="actionClasses"
-                  ng-disabled="tCtrl.selected.length === 0"
-                  ng-click="ctrl.deleteLease(tCtrl.selected);
-                            $event.stopPropagation();">
-            <span class="fa fa-trash"></span>
-            {$ ::'Delete Leases' | translate $}
-          </button>
-        </action-list>
-        <action-list>
           <button class="btn btn-default"
                   ng-class="actionClasses"
                   ng-disabled="tCtrl.selected.length === 0"
@@ -38,6 +28,16 @@
                             $event.stopPropagation();">
             <span class="fa fa-times"></span>
             {$ ::'Unprovision Nodes' | translate $}
+          </button>
+        </action-list>
+        <action-list>
+          <button class="btn btn-danger"
+                  ng-class="actionClasses"
+                  ng-disabled="tCtrl.selected.length === 0"
+                  ng-click="ctrl.deleteLease(tCtrl.selected);
+                            $event.stopPropagation();">
+            <span class="fa fa-trash"></span>
+            {$ ::'Delete Leases' | translate $}
           </button>
         </action-list>
       </div>
@@ -108,7 +108,14 @@
             </div>
           </td>
           <td class="rsp-p2">{$ node.maintenance $}</td>
-          <td class="rsp-p2">{$ node.status $}</td>
+          <td class="rsp-p2">
+            <span ng-repeat="duration in node.lease_duration">
+              <b ng-if="$first && node.lease_duration[1]">{$ duration $}</b>
+              <span ng-if="!$first || !node.lease_duration[1]">{$ duration $}</span>
+              <br>
+            </span>
+          </td>
+          <td class="rsp-p2">{$ node.resource_class $}</td>
           <td class="actions_column">
             <action-list uib-dropdown>
               <button class="split-caret dropdown-toggle btn btn-default toggle"
@@ -122,18 +129,8 @@
               </button>
               <menu>
                 <li role="presentation">
-                  <a class="text-danger"
-                     role="menuitem"
-                     ng-click="ctrl.deleteLease([node]);
-                               $event.stopPropagation();
-                               $event.preventDefault()">
-                    <span class="fa fa-trash"></span>
-                    {$ ::'Delete Lease' | translate $}
-                  </a>
-                </li>
-                <li role="presentation">
                   <a role="menuitem"
-                     ng-if="node.status === 'active'"
+                     ng-if="node.status === 'active' || node.status === 'owned'"
                      ng-click="ctrl.manageNodeNetworks(node);
                                $event.stopPropagation();
                                $event.preventDefault()">
@@ -142,7 +139,7 @@
                   </a>
                 </li>
                 <li role="presentation"
-                    ng-if="node.status === 'active' && node.target_provision_state === null && node.provision_state === 'available'">
+                    ng-if="(node.status === 'active' || node.status === 'owned') && node.target_provision_state === null && node.provision_state === 'available'">
                   <a role="menuitem"
                      ng-click="ctrl.provision([node]);
                                $event.stopPropagation();
@@ -152,7 +149,17 @@
                   </a>
                 </li>
                 <li role="presentation"
-                    ng-if="node.status === 'active'
+                    ng-repeat="transition in ctrl.getPowerTransitions(node)"
+                    ng-if="node.target_power_state === null">
+                  <a role="menuitem"
+                      ng-click="ctrl.setPowerState([node], transition.state);
+                                $event.stopPropagation();
+                                $event.preventDefault()">
+                    {$ transition.buttonDisplay $}
+                  </a>
+                </li>
+                <li role="presentation"
+                    ng-if="(node.status === 'active' || node.status === 'owned')
                            && node.target_provision_state === null
                            && (node.provision_state === 'active' || node.provision_state === 'deploy failed')">
                   <a class="text-danger"
@@ -164,14 +171,14 @@
                     {$ ::'Unprovision' | translate $}
                   </a>
                 </li>
-                <li role="presentation"
-                    ng-repeat="transition in ctrl.getPowerTransitions(node)"
-                    ng-if="node.target_power_state === null">
-                  <a role="menuitem"
-                      ng-click="ctrl.setPowerState([node], transition.state);
-                                $event.stopPropagation();
-                                $event.preventDefault()">
-                    {$ transition.buttonDisplay $}
+                <li role="presentation" ng-if="node.status != 'owned'">
+                  <a class="text-danger"
+                     role="menuitem"
+                     ng-click="ctrl.deleteLease([node]);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-trash"></span>
+                    {$ ::'Delete Lease' | translate $}
                   </a>
                 </li>
               </menu>
@@ -187,7 +194,7 @@
         -->
         <tr ng-if="ctrl.config.expand" ng-repeat-end class="detail-row">
           <td class="detail" colspan="100">
-            <h4>{$ ::'Lease Info' | translate $}</h4>
+            <h4>{$ ::'Current Lease Info' | translate $}</h4>
             <div class="row">
               <div class="table-rsp">
                 <dl class="col-sm-3" ng-repeat="column in ctrl.config.lease_details" style="width: fit-content">

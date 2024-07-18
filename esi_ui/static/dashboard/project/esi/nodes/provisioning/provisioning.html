@@ -1,0 +1,59 @@
+<p class="step-description" translate>Please provide an image to deploy the node with. A network can optionally be attached, and a public key can optionally be uploaded.</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="image_name">Image Name</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.images">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+      ng-if="model.loaded.images && model.images.length === 0"
+      translate>There are no images</div>
+  <select id="image_name"
+          class="form-control"
+          ng-if="model.loaded.images && model.images.length !== 0"
+          ng-options="image.id as image.name for image in model.images"
+          ng-required="true"
+          ng-model="stepModels.image">
+    <option value=""></option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="network_name">Network</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.networks">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+      ng-if="model.loaded.networks && model.networks.length === 0"
+      translate>There are no networks</div>
+  <select id="network_name"
+          class="form-control"
+          ng-if="model.loaded.networks && model.networks.length !== 0"
+          ng-options="network.id as network.name for network in model.networks"
+          ng-model="stepModels.network">
+    <option value=""></option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="keypair_name">SSH Keys</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.keypairs">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+      ng-if="model.loaded.keypairs && model.keypairs.length === 0"
+      translate>There are no keypairs</div>
+  <select id="keypair_name"
+          class="form-control"
+          ng-if="model.loaded.keypairs && model.keypairs.length !== 0"
+          ng-options="keypair.keypair.public_key as keypair.keypair.name for keypair in model.keypairs"
+          ng-model="stepModels.keypair">
+    <option value=""></option>
+  </select>
+</div>

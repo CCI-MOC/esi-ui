@@ -1,0 +1,18 @@
+<p class="step-description" translate>Please select the lease to delete for the node(s).</p>
+
+<span ng-repeat="node in launchContext.nodes">
+  <div class="form-group">
+    <label class="control-label" translate for="node_leases">{$ node.name $}</label>
+    <div class="alert alert-warning"
+         ng-if="node.leases.length === 0"
+         translate>There are no leases on this node.</div>
+    <select id="leases"
+            class="form-control"
+            ng-if="node.leases.length !== 0"
+            ng-options="lease.displayText for lease in node.leases track by lease.id"
+            ng-required="true"
+            ng-model="stepModels.selectedLeases[node.uuid]">
+        <option value=""></option>
+    </select>
+  </div>
+</span>
