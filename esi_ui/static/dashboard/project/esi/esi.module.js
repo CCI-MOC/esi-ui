@@ -19,14 +19,14 @@
         {id: 'provision_state', title: 'Provision State', priority: 1},
         {id: 'power_state', title: 'Power State', priority: 1},
         {id: 'maintenance', title: 'Maintenance', priority: 1},
-        {id: 'status', title: 'Status', priority: 1},
+        {id: 'status', title: 'Lease Status', priority: 1},
       ],
       lease_details: [
         {id: 'lessee', title: 'Lessee', priority: 1},
         {id: 'owner', title: 'Owner', priority: 1},
         {id: 'resource_class', title: 'Resource Class', priority: 1},
-        {id: 'start_time', title: 'Start Time', priority: 1},
-        {id: 'end_time', title: 'End Time', priority: 1},
+        {id: 'start_time', title: 'Start Time (UTC)', priority: 1},
+        {id: 'end_time', title: 'End Time (UTC)', priority: 1},
         {id: 'lease_uuid', title: 'Lease UUID', priority: 1},
         {id: 'properties', title: 'Properties', priority: 1},
       ],
@@ -97,6 +97,11 @@
       {
         label: gettext('Maintenance'),
         name: 'maintenance',
+        singleton: true
+      },
+      {
+        label: gettext('Lease Status'),
+        name: 'status',
         singleton: true
       },
       {

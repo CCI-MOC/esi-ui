@@ -6,6 +6,8 @@ from django.conf import settings
 from esi import connection
 from esi.lib import nodes
 
+from metalsmith import _provisioner
+from metalsmith import instance_config
 from openstack import config
 from horizon.utils.memoized import memoized  # noqa
 
@@ -87,6 +89,26 @@ def node_list(request):
                                             + ' (%s)' % ','.join(pfws) if pfws else '')
 
     return node_infos
+
+
+def deploy_node(request, node):
+    token = request.user.token.id
+    kwargs = json.loads(request.body.decode('utf-8'))
+
+    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+    
+    if 'ssh_keys' in kwargs:
+        kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
+        del kwargs['ssh_keys']
+
+    return provisioner.provision_node(node, **kwargs).id
+
+
+def undeploy_node(request, node):
+    token = request.user.token.id
+    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+
+    return provisioner.unprovision_node(node, wait=None).id
 
 
 def set_power_state(request, node, target):

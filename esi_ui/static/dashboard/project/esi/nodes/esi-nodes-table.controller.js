@@ -7,12 +7,15 @@
 
   controller.$inject = [
     '$q',
+    '$timeout',
     'horizon.dashboard.project.esi.esiNodesTableService',
     'horizon.dashboard.project.esi.nodeConfig',
     'horizon.dashboard.project.esi.nodeFilterFacets',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
   ];
+
+  const REFRESH_RATE = 10000;
 
   var POWER_ON_TRANSITIONS = [
     {
@@ -31,7 +34,25 @@
     }
   ];
 
-  function controller($q, nodesService, config, filterFacets, toastService, spinnerService) {
+  const PROVISION_ERROR_STATES = new Set([
+    'error',
+    'deploy failed',
+    'clean failed',
+    'service failed',
+    'inspect failed',
+    'adopt failed',
+    'rescue failed',
+    'unrescue failed'
+  ]);
+
+  const PROVISION_STABLE_STATES = new Set([
+    'manageable',
+    'available',
+    'active',
+    'rescue'
+  ]);
+
+  function controller($q, $timeout, nodesService, config, filterFacets, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -42,6 +63,8 @@
     ctrl.getPowerTransitions = getPowerTransitions;
     ctrl.setPowerState = setPowerState;
     ctrl.deleteLease = deleteLease;
+    ctrl.provision = provision;
+    ctrl.unprovision = unprovision;
 
     ////////////////
 
@@ -54,6 +77,22 @@
         ctrl.nodesSrc = response.data.nodes;
         ctrl.nodesDisplay = ctrl.nodesSrc;
         console.log(ctrl.nodesSrc);
+
+        var in_provision_transition = false;
+        ctrl.nodesSrc.forEach(function(node) {
+          if (PROVISION_ERROR_STATES.has(node.provision_state)) {
+            return;
+          }
+
+          if (PROVISION_STABLE_STATES.has(node.target_provision_state)) {
+            in_provision_transition = true;
+          }
+        });
+
+        if (in_provision_transition) {
+          $timeout(init, REFRESH_RATE);
+        }
+
         spinnerService.hideModalSpinner();
       })
       .catch(function(response) {
@@ -108,6 +147,43 @@
         toastService.add('error', 'Unable to cancel lease. ' + (response.data ? response.data : ''));
         spinnerService.hideModalSpinner();
       });
+    }
+
+    function provision(nodes) {
+      if (nodes.length === 0) {
+        toastService.add('error', 'No nodes were selected to provision.');
+        return;
+      }
+
+      nodesService.editProvision()
+      .then(function(provision_params) {
+        angular.forEach(nodes, function(node) {
+          node.target_provision_state = 'active';
+          nodesService.provision(node, provision_params)
+          .catch(function(response) {
+            toastService.add('error', 'Unable to provision a node. ' + (response.data ? response.data : ''));
+          });
+        });
+
+        $timeout(init, 60000);
+      });
+    }
+
+    function unprovision(nodes) {
+      if (nodes.length === 0) {
+        toastService.add('error', 'No nodes were selected to unprovision.');
+        return;
+      }
+
+      angular.forEach(nodes, function(node) {
+        node.target_provision_state = 'available';
+        nodesService.unprovision(node)
+        .catch(function(response) {
+          toastService.add('error', 'Unable to unprovision a node. ' + (response.data ? response.data : ''));
+        });
+      });
+
+      $timeout(init, 60000);
     }
   }
 
