@@ -20,6 +20,26 @@
             {$ ::'Delete Leases' | translate $}
           </button>
         </action-list>
+        <action-list>
+          <button class="btn btn-default"
+                  ng-class="actionClasses"
+                  ng-disabled="tCtrl.selected.length === 0"
+                  ng-click="ctrl.provision(tCtrl.selected);
+                            $event.stopPropagation();">
+            <span class="fa fa-pencil"></span>
+            {$ ::'Provision Nodes' | translate $}
+          </button>
+        </action-list>
+        <action-list>
+          <button class="btn btn-danger"
+                  ng-class="actionClasses"
+                  ng-disabled="tCtrl.selected.length === 0"
+                  ng-click="ctrl.unprovision(tCtrl.selected);
+                            $event.stopPropagation();">
+            <span class="fa fa-times"></span>
+            {$ ::'Unprovision Nodes' | translate $}
+          </button>
+        </action-list>
       </div>
     </div>
 
@@ -109,6 +129,29 @@
                                $event.preventDefault()">
                     <span class="fa fa-trash"></span>
                     {$ ::'Delete Lease' | translate $}
+                  </a>
+                </li>
+                <li role="presentation"
+                    ng-if="node.status === 'active' && node.target_provision_state === null && node.provision_state === 'available'">
+                  <a role="menuitem"
+                     ng-click="ctrl.provision([node]);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-pencil"></span>
+                    {$ ::'Provision' | translate $}
+                  </a>
+                </li>
+                <li role="presentation"
+                    ng-if="node.status === 'active'
+                           && node.target_provision_state === null
+                           && (node.provision_state === 'active' || node.provision_state === 'deploy failed')">
+                  <a class="text-danger"
+                     role="menuitem"
+                     ng-click="ctrl.unprovision([node]);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-times"></span>
+                    {$ ::'Unprovision' | translate $}
                   </a>
                 </li>
                 <li role="presentation"

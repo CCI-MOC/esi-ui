@@ -22,6 +22,27 @@ class Nodes(generic.View):
             'nodes': nodes
         }
 
+
+@urls.register
+class Deploy(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/deploy/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax(data_required=True)
+    def put(self, request, node):
+        esi_api.deploy_node(request, node)
+
+
+@urls.register
+class Undeploy(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/undeploy/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def put(self, request, node):
+        esi_api.undeploy_node(request, node)
+
+
 @urls.register
 class StatesPower(generic.View):
 
