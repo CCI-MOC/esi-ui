@@ -1,0 +1,42 @@
+<div class="modal-header">
+  <a class="close" ng-click="$dismiss()">
+    <span class="fa fa-times"></span>
+  </a>
+  <div class="h4 modal-title">
+    {$::ctrl.formTitle$}
+  </div>
+</div>
+
+<form name="schemaForm">
+  <div class="modal-body" style="display: flex">
+    <div style="width: 50%; text-align: center">
+      <label for="start">{$ ::'Start Time (UTC)' | translate $}</label>
+      <br>
+      <input type="date" id="start" ng-model="ctrl.start_date" />
+      <input type="time" id="start" ng-required="ctrl.start_date" ng-model="ctrl.start_time" />
+      <span>{$ ::'Default: now' | translate $}</span>
+    </div>
+    <div style="width: 50%; text-align: center">
+      <label for="end">{$ ::'End Time (UTC)' | translate $}</label>
+      <br>
+      <input type="date" id="end" ng-model="ctrl.end_date" />
+      <input type="time" id="end" ng-required="ctrl.end_date" ng-model="ctrl.end_time" />
+      <span>{$ ::'Default: offer end time' | translate $}</span>
+    </div>
+  </div>
+</form>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-default pull-left" ng-click="$dismiss()">
+    <span class="fa fa-close"></span>
+    <translate>Cancel</translate>
+  </button>
+
+  <button type="button"
+          class="btn btn-primary"
+          ng-disabled="schemaForm.$invalid"
+          ng-click="ctrl.submit($event)">
+    <span class="fa fa-chevron-right"></span>
+    {$::ctrl.submitText$}
+  </button>
+</div>

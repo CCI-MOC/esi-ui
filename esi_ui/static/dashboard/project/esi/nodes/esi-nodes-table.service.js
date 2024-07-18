@@ -13,6 +13,7 @@
     var service = {
       nodeList: nodeList,
       setPowerState: setPowerState,
+      deleteLease: deleteLease,
     };
     return service;
 
@@ -26,6 +27,10 @@
       };
 
       return apiService.put('/api/esi/nodes/' + node.uuid + '/states/power', data);
+    }
+
+    function deleteLease(lease_uuid) {
+      return apiService.delete('/api/esi/lease/' + lease_uuid);
     }
   }
 

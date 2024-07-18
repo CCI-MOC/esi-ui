@@ -10,6 +10,16 @@
     <div class="row">
       <div class="hz-dynamic-table-preamble col-xs-12">
         <hz-magic-search-bar class="hz-magic-search-bar" ng-if="ctrl.filterFacets"></hz-magic-search-bar>
+        <action-list>
+          <button class="btn btn-danger"
+                  ng-class="actionClasses"
+                  ng-disabled="tCtrl.selected.length === 0"
+                  ng-click="ctrl.deleteLease(tCtrl.selected);
+                            $event.stopPropagation();">
+            <span class="fa fa-trash"></span>
+            {$ ::'Delete Leases' | translate $}
+          </button>
+        </action-list>
       </div>
     </div>
 
@@ -71,7 +81,7 @@
           <td class="rsp-p2">{$ node.provision_state + (node.target_provision_state ? " → " + node.target_provision_state : "") $}</td>
           <td class="rsp-p2">{$ node.power_state + (node.target_power_state ? " → " + node.target_power_state : "") $}</td>
           <td class="rsp-p2">{$ node.maintenance $}</td>
-          <td class="rsp-p2">{$ node.uuid $}</td>
+          <td class="rsp-p2">{$ node.status $}</td>
           <td class="actions_column">
             <action-list uib-dropdown>
               <button class="split-caret dropdown-toggle btn btn-default toggle"
@@ -84,6 +94,16 @@
                 {$ ::'Actions' | translate $}
               </button>
               <menu>
+                <li role="presentation">
+                  <a class="text-danger"
+                     role="menuitem"
+                     ng-click="ctrl.deleteLease([node]);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-trash"></span>
+                    {$ ::'Delete Lease' | translate $}
+                  </a>
+                </li>
                 <li role="presentation"
                     ng-repeat="transition in ctrl.getPowerTransitions(node)"
                     ng-if="node.target_power_state === null">
@@ -112,7 +132,12 @@
               <div class="table-rsp">
                 <dl class="col-sm-3" ng-repeat="column in ctrl.config.lease_details" style="width: fit-content">
                   <dt>{$ column.title $}</dt>
-                  <dd>{$ node[column.id] $}</dd>
+                  <dd ng-if="column.id !== 'properties'">
+                    {$ node[column.id] $}
+                  </dd>
+                  <dd ng-if="column.id === 'properties'" ng-repeat="prop in node['properties']">
+                    {$ prop[0] $}: {$ prop[1] $}
+                  </dd>
                 </dl>
               </div>
             </div>
