@@ -1,6 +1,4 @@
 import json
-import dateutil
-import pytz
 import concurrent.futures
 
 from django.conf import settings
@@ -34,63 +32,38 @@ def esiclient(token):
 def node_list(request):
     connection = esiclient(token=request.user.token.id)
 
-    def node_list_full_info(connection):
-        """Get a list of nodes with information from Ironic and ESI-Leap
-
-        :param connection: An ESI connection
-        :type connection: :class:`~esi.connection.ESIConnection`
-        :returns: A list of dictionaries containing baremetal and lease information
-        """
-
-        esi_nodes = []
-        baremetal_nodes = []
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            f1 = executor.submit(connection.lease.nodes)
-            f2 = executor.submit(connection.baremetal.nodes, details=True)
-            f3 = executor.submit(connection.lease.leases)
-            esi_nodes = list(f1.result())
-            baremetal_nodes = list(f2.result())
-            leases = list(f3.result())
-
-        list_of_nodes = []
-        for lease in leases:
-            list_of_nodes.append((lease, next((e for e in esi_nodes if e.id == lease.resource_uuid), None),
-                                 next((bm for bm in baremetal_nodes if bm.id == lease.resource_uuid), None)))
-
-        return [
-            {
-                'uuid': lease.resource_uuid,
-                'name': lease.resource,
-                'maintenance': e.maintenance if lease.status == 'active' else '',
-                'provision_state': e.provision_state if lease.status == 'active' else '',
-                'target_provision_state': bm.target_provision_state if lease.status == 'active' else '',
-                'power_state': bm.power_state if lease.status == 'active' else '',
-                'target_power_state': bm.target_power_state if lease.status == 'active' else '', 
-                'properties': [[key, value] for key, value in lease.resource_properties.items()],
-                'lease_uuid': lease.id,
-                'owner': lease.owner,
-                'lessee': e.lessee if lease.status == 'active' else '',
-                'resource_class': lease.resource_class,
-                'start_time': lease.start_time.replace('T', ' ', 1),
-                'end_time': lease.end_time.replace('T', ' ', 1),
-                'status': lease.status
-            }
-            for lease, e, bm in list_of_nodes
-        ]
-
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        f1 = executor.submit(nodes.network_list, connection)
+        f1 = executor.submit(connection.lease.nodes)
+        f2 = executor.submit(connection.lease.leases)
+        f3 = executor.submit(nodes.network_list, connection)
+        esi_nodes = {e.id: e for e in f1.result()}
+        leases = list(f2.result())
+        node_networks = {nn['node'].id: nn['network_info'] for nn in f3.result()}
 
-        # node_list_full_info gives temporary functionality that will eventually end up in esi-leap
-        f2 = executor.submit(node_list_full_info, connection)
-
-        node_networks = f1.result()
-        node_infos = f2.result()
+    lease_node_list = [(lease, esi_nodes.get(lease.resource_uuid)) for lease in leases]
+    node_infos = [
+        {
+            'uuid': lease.resource_uuid,
+            'name': lease.resource,
+            'maintenance': e.maintenance if lease.status == 'active' else '',
+            'provision_state': e.provision_state if lease.status == 'active' else '',
+            'target_provision_state': e.target_provision_state if lease.status == 'active' else '',
+            'power_state': e.power_state if lease.status == 'active' else '',
+            'target_power_state': e.target_power_state if lease.status == 'active' else '', 
+            'properties': [[key, value] for key, value in lease.resource_properties.items()],
+            'lease_uuid': lease.id,
+            'owner': lease.owner,
+            'lessee': e.lessee if lease.status == 'active' else '',
+            'resource_class': lease.resource_class,
+            'start_time': lease.start_time,
+            'end_time': lease.end_time,
+            'status': lease.status
+        }
+        for lease, e in lease_node_list
+    ]
 
     for node in node_infos:
-        network_info = next((n['network_info'] for n in node_networks
-                             if n['node'].id == node['uuid']), None)
+        network_info = node_networks.get(node['uuid'])
         
         node['mac_addresses'] = []
         node['network_port_names'] = []
