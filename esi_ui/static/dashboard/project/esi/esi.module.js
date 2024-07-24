@@ -2,7 +2,7 @@
   'use strict';
 
   angular
-    .module('horizon.dashboard.project.esi', [])
+    .module('horizon.dashboard.project.esi', ['horizon.dashboard.project.esi.nodes.manage-networks'])
     .config(config);
 
   config.$inject = ['$provide', '$windowProvider'];
