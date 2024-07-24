@@ -61,6 +61,34 @@ class StatesPower(generic.View):
 
 
 @urls.register
+class VifsAttach(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/vifs$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax(data_required=True)
+    def post(self, request, node):
+        info = esi_api.network_attach(request, node)
+        return {
+            'node': info['node'].id,
+            'ports': [port.name for port in info['ports']],
+            'networks': [network.name for network in info['networks']]
+        }
+
+
+@urls.register
+class VifsDetach(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/vifs/(?P<port>{})$'.format(LOGICAL_NAME_PATTERN, LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def delete(self, request, node, port):
+        is_detached = esi_api.network_detach(request, node, port)
+        return {
+            'is_detached': is_detached
+        }
+
+
+@urls.register
 class Offers(generic.View):
 
     url_regex = r'esi/offers/$'

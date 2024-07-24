@@ -18,7 +18,10 @@
       deleteLease: deleteLease,
       editProvision: editProvision,
       provision: provision,
-      unprovision: unprovision
+      unprovision: unprovision,
+      editNetworks: editNetworks,
+      networkAttach: networkAttach,
+      networkDetach: networkDetach,
     };
     return service;
 
@@ -44,17 +47,36 @@
         keyboard: false,
         controller: 'horizon.dashboard.project.esi.ProvisionModalFormController as ctrl',
         templateUrl: basePath + 'forms/provision-modal-form.html'
-      };
+      }
 
       return $uibModal.open(modalConfig).result;
     }
-
+    
     function provision(node, provision_params) {
       return apiService.put('/api/esi/nodes/' + node.uuid + '/deploy/', provision_params);
     }
 
     function unprovision(node) {
       return apiService.put('/api/esi/nodes/' + node.uuid + '/undeploy/');
+    }    
+
+    function editNetworks() {
+      var modalConfig = {
+        backdrop: 'static',
+        keyboard: false,
+        controller: 'horizon.dashboard.project.esi.NetworkModalFormController as ctrl',
+        templateUrl: basePath + 'forms/network-modal-form.html'
+      };
+
+      return $uibModal.open(modalConfig).result;
+    }
+
+    function networkAttach(node, network_params) {
+      return apiService.post('/api/esi/nodes/' + node.uuid + '/vifs', network_params);
+    }
+
+    function networkDetach(node, network_params) {
+      return apiService.delete('/api/esi/nodes/' + node.uuid + '/vifs/' + network_params.port);
     }
   }
 

@@ -131,6 +131,16 @@
                     {$ ::'Delete Lease' | translate $}
                   </a>
                 </li>
+                <li role="presentation">
+                  <a role="menuitem"
+                     ng-if="node.status === 'active'"
+                     ng-click="ctrl.manageNodeNetworks(node);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-pencil"></span>
+                    {$ ::'Manage Networks' | translate $}
+                  </a>
+                </li>
                 <li role="presentation"
                     ng-if="node.status === 'active' && node.target_provision_state === null && node.provision_state === 'available'">
                   <a role="menuitem"

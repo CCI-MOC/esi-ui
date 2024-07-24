@@ -129,6 +129,19 @@ def set_power_state(request, node, target):
     return esiclient(token=token).baremetal.wait_for_node_power_state(node=node, expected_state=target)
 
 
+def network_attach(request, node):
+    connection = esiclient(token=request.user.token.id)
+    attach_info = json.loads(request.body.decode('utf-8'))
+
+    return nodes.network_attach(connection, node, attach_info)
+
+
+def network_detach(request, node, vif):
+    connection = esiclient(token=request.user.token.id)
+
+    return nodes.network_attach(connection, node, port=vif)
+
+
 def offer_list(request):
     token = request.user.token.id
 
