@@ -79,7 +79,14 @@
           </td>
           <td class="rsp-p2">{$ node.name $}</td>
           <td class="rsp-p2">{$ node.provision_state + (node.target_provision_state ? " → " + node.target_provision_state : "") $}</td>
-          <td class="rsp-p2">{$ node.power_state + (node.target_power_state ? " → " + node.target_power_state : "") $}</td>
+          <td class="rsp-p2">
+            <div class="progress-text horizon-loading-bar" ng-if="node.target_power_state !== ''">
+              <div class="progress progress-striped active" ng-if="node.target_power_state !== null">
+                <div class="progress-bar"></div>
+              </div>
+              {$ node.power_state + (node.target_power_state ? " → " + node.target_power_state : "") $}
+            </div>
+          </td>
           <td class="rsp-p2">{$ node.maintenance $}</td>
           <td class="rsp-p2">{$ node.status $}</td>
           <td class="actions_column">
