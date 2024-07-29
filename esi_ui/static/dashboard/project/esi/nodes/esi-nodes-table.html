@@ -165,6 +165,16 @@
                   </a>
                 </li>
                 <li role="presentation"
+                    ng-if="node.status === 'active' && node.target_provision_state === null && node.provision_state === 'available'">
+                  <a role="menuitem"
+                     ng-click="ctrl.provision([node]);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-pencil"></span>
+                    {$ ::'Provision' | translate $}
+                  </a>
+                </li>
+                <li role="presentation"
                     ng-repeat="transition in ctrl.getPowerTransitions(node)"
                     ng-if="node.target_power_state === null">
                   <a role="menuitem"

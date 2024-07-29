@@ -12,6 +12,7 @@
     'horizon.dashboard.project.esi.nodeConfig',
     'horizon.dashboard.project.esi.nodeFilterFacets',
     'horizon.dashboard.project.esi.nodes.manage-networks.modal.service',
+    'horizon.dashboard.project.esi.nodes.provisioning.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
   ];
@@ -53,7 +54,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, toastService, spinnerService) {
+  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, provisioningModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -152,12 +153,7 @@
     }
 
     function provision(nodes) {
-      if (nodes.length === 0) {
-        toastService.add('error', 'No nodes were selected to provision.');
-        return;
-      }
-
-      nodesService.editProvision()
+      provisioningModalService.open()
       .then(function(provision_params) {
         angular.forEach(nodes, function(node) {
           node.target_provision_state = 'active';
@@ -195,8 +191,6 @@
 
       manageNetworksModalService.open(launchContext)
       .then(function (response) {
-        console.log('response: ', response);
-
         nodesService.networkAttach(node, response.action === 'attach' ? response.attach : response.detach)
         .then(function() {
           init();

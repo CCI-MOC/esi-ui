@@ -97,7 +97,7 @@ def deploy_node(request, node):
 
     provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
     
-    if 'ssh_keys' in kwargs:
+    if kwargs.get('ssh_keys'):
         kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
         del kwargs['ssh_keys']
 
