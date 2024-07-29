@@ -4,7 +4,8 @@
   angular
     .module('horizon.dashboard.project.esi', [
       'horizon.dashboard.project.esi.nodes.manage-networks',
-      'horizon.dashboard.project.esi.nodes.provisioning'
+      'horizon.dashboard.project.esi.nodes.provisioning',
+      'horizon.dashboard.project.esi.offers.claim',
     ])
     .config(config);
 

@@ -10,11 +10,12 @@
     'horizon.dashboard.project.esi.esiOffersTableService',
     'horizon.dashboard.project.esi.offerConfig',
     'horizon.dashboard.project.esi.offerFilterFacets',
+    'horizon.dashboard.project.esi.offers.claim.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
   ];
 
-  function controller($q, offersService, config, filterFacets, toastService, spinnerService) {
+  function controller($q, offersService, config, filterFacets, ClaimModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -49,7 +50,7 @@
         return;
       }
 
-      offersService.editClaim()
+      ClaimModalService.open()
       .then(function(times) {
         spinnerService.showModalSpinner('Claiming Offer(s)');
 
@@ -63,7 +64,7 @@
           init();
         })
         .catch(function(response) {
-          toastService.add('error', 'Unable to claim am offer. ' + (response.data ? response.data : ''));
+          toastService.add('error', 'Unable to claim an offer. ' + (response.data ? response.data : ''));
           spinnerService.hideModalSpinner();
         });
       });
