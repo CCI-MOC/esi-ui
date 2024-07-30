@@ -22,6 +22,33 @@ class Nodes(generic.View):
             'nodes': nodes
         }
 
+
+@urls.register
+class Deploy(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/deploy/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax(data_required=True)
+    def put(self, request, node):
+        uuid = esi_api.deploy_node(request, node)
+        return {
+            'uuid': uuid
+        }
+
+
+@urls.register
+class Undeploy(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/undeploy/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def put(self, request, node):
+        uuid = esi_api.undeploy_node(request, node)
+        return {
+            'uuid': uuid
+        }
+
+
 @urls.register
 class StatesPower(generic.View):
 
@@ -31,6 +58,34 @@ class StatesPower(generic.View):
     def put(self, request, node):
         target = request.DATA.get('target')
         return esi_api.set_power_state(request, node, target)
+
+
+@urls.register
+class VifsAttach(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/vifs$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax(data_required=True)
+    def post(self, request, node):
+        info = esi_api.network_attach(request, node)
+        return {
+            'node': info['node'].id,
+            'ports': [port.name for port in info['ports']],
+            'networks': [network.name for network in info['networks']]
+        }
+
+
+@urls.register
+class VifsDetach(generic.View):
+
+    url_regex = r'esi/nodes/(?P<node>{})/vifs/(?P<port>{})$'.format(LOGICAL_NAME_PATTERN, LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def delete(self, request, node, port):
+        is_detached = esi_api.network_detach(request, node, port)
+        return {
+            'is_detached': is_detached
+        }
 
 
 @urls.register

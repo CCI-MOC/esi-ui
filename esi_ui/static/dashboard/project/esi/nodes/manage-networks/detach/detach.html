@@ -1,0 +1,16 @@
+<p class="step-description" translate>Please specify which network port you want to detach this node from.</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="port_name">Port</label>
+  <div class="alert alert-warning"
+       ng-if="launchContext.node.detachable_ports.length === 0"
+       translate>There are no detachable ports</div>
+  <select id="port_name"
+          class="form-control"
+          ng-required="currentIndex === 1"
+          ng-if="launchContext.node.detachable_ports.length !== 0"
+          ng-options="port for port in launchContext.node.detachable_ports"
+          ng-model="stepModels.detach.port">
+    <option value=""></option>
+  </select>
+</div>

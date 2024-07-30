@@ -6,6 +6,8 @@ from django.conf import settings
 from esi import connection
 from esi.lib import nodes
 
+from metalsmith import _provisioner
+from metalsmith import instance_config
 from openstack import config
 from horizon.utils.memoized import memoized  # noqa
 
@@ -89,6 +91,26 @@ def node_list(request):
     return node_infos
 
 
+def deploy_node(request, node):
+    token = request.user.token.id
+    kwargs = json.loads(request.body.decode('utf-8'))
+
+    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+    
+    if kwargs.get('ssh_keys'):
+        kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
+        del kwargs['ssh_keys']
+
+    return provisioner.provision_node(node, **kwargs).id
+
+
+def undeploy_node(request, node):
+    token = request.user.token.id
+    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+
+    return provisioner.unprovision_node(node, wait=None).id
+
+
 def set_power_state(request, node, target):
     """
     Change the power state of the given node identified by node_id.
@@ -105,6 +127,19 @@ def set_power_state(request, node, target):
         target = target.split(' ', 1)[1]
 
     return esiclient(token=token).baremetal.wait_for_node_power_state(node=node, expected_state=target)
+
+
+def network_attach(request, node):
+    connection = esiclient(token=request.user.token.id)
+    attach_info = json.loads(request.body.decode('utf-8'))
+
+    return nodes.network_attach(connection, node, attach_info)
+
+
+def network_detach(request, node, vif):
+    connection = esiclient(token=request.user.token.id)
+
+    return nodes.network_attach(connection, node, port=vif)
 
 
 def offer_list(request):

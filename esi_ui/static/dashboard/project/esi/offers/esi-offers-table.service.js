@@ -6,32 +6,18 @@
     .factory('horizon.dashboard.project.esi.esiOffersTableService', offersService);
     
   offersService.$inject = [
-    '$uibModal',
     'horizon.framework.util.http.service',
-    'horizon.dashboard.project.esi.basePath',
   ];
   
-  function offersService($uibModal, apiService, basePath) {
+  function offersService(apiService) {
     var service = {
       offerList: offerList,
-      editClaim: editClaim,
       offerClaim: offerClaim,
     };
     return service;
 
     function offerList() {
       return apiService.get('/api/esi/offers/');
-    }
-
-    function editClaim() {
-      var modalConfig = {
-        backdrop: 'static',
-        keyboard: false,
-        controller: 'horizon.dashboard.project.esi.OfferModalFormController as ctrl',
-        templateUrl: basePath + 'forms/offer-modal-form.html'
-      };
-
-      return $uibModal.open(modalConfig).result;
     }
 
     function offerClaim(offer, times) {
