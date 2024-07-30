@@ -6,7 +6,7 @@
     .directive('esiOffersTable', esiOffersTable);
 
   esiOffersTable.$inject = [
-    'horizon.dashboard.project.esi.basePath'
+    'horizon.dashboard.project.esi.offers.basePath'
   ];
 
   function esiOffersTable(basePath) {
@@ -17,7 +17,7 @@
         offersSrc: '='
       },
       controller: 'horizon.dashboard.project.esi.EsiOffersTableController as ctrl',
-      templateUrl: basePath + 'offers/esi-offers-table.html',
+      templateUrl: basePath + 'esi-offers-table.html',
     };
 
     return directive;

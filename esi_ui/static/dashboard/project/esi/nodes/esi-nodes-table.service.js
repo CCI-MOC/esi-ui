@@ -6,12 +6,10 @@
     .factory('horizon.dashboard.project.esi.esiNodesTableService', nodesService);
     
   nodesService.$inject = [
-    '$uibModal',
     'horizon.framework.util.http.service',
-    'horizon.dashboard.project.esi.basePath',
   ];
   
-  function nodesService($uibModal, apiService, basePath) {
+  function nodesService(apiService) {
     var service = {
       nodeList: nodeList,
       setPowerState: setPowerState,
