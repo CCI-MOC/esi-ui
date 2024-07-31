@@ -1,0 +1,79 @@
+<div class="modal-header">
+  <a class="close" ng-click="$dismiss()">
+    <span class="fa fa-times"></span>
+  </a>
+  <div class="h4 modal-title">
+    {$::ctrl.formTitle$}
+  </div>
+</div>
+
+<div class="modal-body">
+  <div style="width: 100%; display: flex; flex-direction: column">
+    <div class="form-group">
+      <label for="image_name">
+        {$ ::'Image Name' | translate $}
+        <span class="hz-icon-required fa fa-asterisk"></span>
+      </label>
+      <br>
+      <div ng-if="ctrl.images === null" style="width: 100%; text-align: center">
+        <span class="fa fa-spinner fa-spin fa-2x"></span>
+      </div>
+      <select class="form-control"
+              ng-if="ctrl.images !== null"
+              name="image_name"
+              ng-model="ctrl.selected.image"
+              required
+              ng-options="image for image in ctrl.images">
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="networks">
+        {$ ::'Networks' | translate $}
+      </label>
+      <br>
+      <div ng-if="ctrl.networks === null" style="width: 100%; text-align: center">
+        <span class="fa fa-spinner fa-spin fa-2x"></span>
+      </div>
+      <select class="form-control"
+              ng-if="ctrl.networks !== null"
+              name="networks"
+              ng-model="ctrl.selected.nics"
+              ng-options="network for network in ctrl.networks">
+        <option value=""></option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="ssh_keys">
+        {$ ::'SSH Keys' | translate $}
+      </label>
+      <br>
+      <div ng-if="ctrl.ssh_keys === null" style="width: 100%; text-align: center">
+        <span class="fa fa-spinner fa-spin fa-2x"></span>
+      </div>
+      <select class="form-control"
+              ng-if="ctrl.ssh_keys !== null"
+              name="ssh_keys"
+              ng-model="ctrl.selected.ssh_keys"
+              ng-options="key.name for key in ctrl.ssh_keys">
+        <option value=""></option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-default pull-left" ng-click="$dismiss()">
+    <span class="fa fa-close"></span>
+    <translate>Cancel</translate>
+  </button>
+
+  <button type="button"
+          class="btn btn-primary"
+          ng-disabled="schemaForm.$invalid"
+          ng-click="ctrl.submit($event)">
+    <span class="fa fa-chevron-right"></span>
+    {$::ctrl.submitText$}
+  </button>
+</div>
