@@ -1,0 +1,78 @@
+<p class="step-description" translate>Please provide either a network, port, or trunk to attach to the node. A MAC address can optionally be provided.</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="mac_address">MAC Address</label>
+  <div class="alert alert-warning"
+       ng-if="launchContext.node.attachable_mac_addresses.length === 0"
+       translate>There are no available MAC Addresses</div>
+  <select id="mac_address"
+          class="form-control"
+          ng-if="launchContext.node.attachable_mac_addresses.length !== 0"
+          ng-options="mac_address for mac_address in launchContext.node.attachable_mac_addresses"
+          ng-model="stepModels.attach.mac_address">
+      <option value="">Any</option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="network_name">Network</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.networks">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+      ng-if="model.loaded.networks && model.networks.length === 0"
+      translate>There are no networks</div>
+  <select id="network_name"
+          class="form-control"
+          ng-required="currentIndex === 0 && !stepModels.attach.port && !stepModels.attach.trunk"
+          ng-disabled="!launchContext.node.attachable_mac_addresses.length || stepModels.attach.port || stepModels.attach.trunk"
+          ng-if="model.loaded.networks && model.networks.length !== 0"
+          ng-options="network.id as network.name for network in model.networks"
+          ng-model="stepModels.attach.network">
+    <option value=""></option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="port_name">Port</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.ports">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+       ng-if="model.loaded.ports && model.ports.length === 0"
+       translate>There are no ports</div>
+  <select id="port_name"
+          class="form-control"
+          ng-required="currentIndex === 0 && !stepModels.attach.network && !stepModels.attach.trunk"
+          ng-disabled="!launchContext.node.attachable_mac_addresses.length || stepModels.attach.network || stepModels.attach.trunk"
+          ng-if="model.loaded.ports && model.ports.length !== 0"
+          ng-options="port.id as port.name for port in model.ports"
+          ng-model="stepModels.attach.port">
+    <option value=""></option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="trunk_name">Trunk</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.trunks">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+       ng-if="model.loaded.trunks && model.trunks.length === 0"
+       translate>There are no trunks</div>
+  <select id="trunk_name"
+          class="form-control"
+          ng-required="currentIndex === 0 && !stepModels.attach.network && !stepModels.attach.port"
+          ng-disabled="!launchContext.node.attachable_mac_addresses.length || stepModels.attach.network || stepModels.attach.port"
+          ng-if="model.loaded.trunks && model.trunks.length !== 0"
+          ng-options="trunk.id as trunk.name for trunk in model.trunks"
+          ng-model="stepModels.attach.trunk">
+    <option value=""></option>
+  </select>
+</div>

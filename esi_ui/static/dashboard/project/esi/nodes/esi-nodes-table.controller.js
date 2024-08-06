@@ -11,6 +11,7 @@
     'horizon.dashboard.project.esi.esiNodesTableService',
     'horizon.dashboard.project.esi.nodeConfig',
     'horizon.dashboard.project.esi.nodeFilterFacets',
+    'horizon.dashboard.project.esi.nodes.manage-networks.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
   ];
@@ -52,7 +53,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, nodesService, config, filterFacets, toastService, spinnerService) {
+  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -65,6 +66,7 @@
     ctrl.deleteLease = deleteLease;
     ctrl.provision = provision;
     ctrl.unprovision = unprovision;
+    ctrl.manageNodeNetworks = manageNodeNetworks;
 
     ////////////////
 
@@ -190,6 +192,27 @@
       });
 
       $timeout(init, 60000);
+    }
+
+    function manageNodeNetworks(node) {
+      var launchContext = {
+        node: node
+      };
+
+      manageNetworksModalService.open(launchContext)
+      .then(function (response) {
+        if (response.action === 'attach') {
+          nodesService.networkAttach(node, response.attach)
+          .then(function() {
+            init();
+          });
+        } else {
+          nodesService.networkDetach(node, response.detach)
+          .then(function() {
+            init();
+          });
+        }
+      });
     }
   }
 
