@@ -1,0 +1,23 @@
+{% extends "horizon/client_side/template.html" %}
+{% load horizon %}
+
+{% block id %}balloon_instance{% endblock %}
+
+{% block template %}
+{% jstemplate %}
+<div class="portTableHeader">
+  <div class="title">[[server_connections_label]]</div>
+</div>
+<table class="detailInfoTable">
+  <caption></caption>
+  <tbody>
+    [[#connections]]
+    <tr>
+      <th>[[mac_address]]</th>
+      <td>[[port_name]]</td>
+    </tr>
+    [[/connections]]
+  </tbody>
+</table>
+{% endjstemplate %}
+{% endblock %}
