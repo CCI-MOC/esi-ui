@@ -1,0 +1,37 @@
+{% extends "horizon/client_side/template.html" %}
+{% load horizon %}
+
+{% block id %}balloon_network_port{% endblock %}
+
+{% block template %}
+{% jstemplate %}
+<div class="portTableHeader">
+  <div class="title">Network Info</div>
+</div>
+<table class="detailInfoTable">
+  <caption></caption>
+  <tbody>
+    [[#floating_ips]]
+    <tr>
+      <th>Floating IP</th>
+      <td>[[.]]</td>
+    </tr>
+    [[/floating_ips]]
+    [[#fixed_ips]]
+    <tr>
+      <th>Subnet</th>
+      <td>[[subnet_id]]</td>
+      <td>[[ip_address]]</td>
+    </tr>
+    [[/fixed_ips]]
+    [[#sub_ports]]
+    <tr>
+      <th>Subport</th>
+      <td>[[port_id]]</td>
+      <td>[[name]]</td>
+    </tr>
+    [[/sub_ports]]
+  </tbody>
+</table>
+{% endjstemplate %}
+{% endblock %}
