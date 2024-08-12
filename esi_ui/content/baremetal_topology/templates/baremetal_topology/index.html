@@ -855,13 +855,13 @@
                   port.server_ids.forEach(function(server_id) {
                     self.new_link(self.find_by_id(port.id), self.find_by_id(server_id));
                   });
-                }
 
-                if (port.sub_ports.length > 0) {
-                  port.sub_ports.forEach(function(sub_port) {
-                    delete ports_to_delete[sub_port.port_id];
-                    self.new_link(self.find_by_id(port.id), self.find_by_id(sub_port.port_id));
-                  });
+                  if (port.sub_ports.length > 0) {
+                    port.sub_ports.forEach(function(sub_port) {
+                      delete ports_to_delete[sub_port.port_id];
+                      self.new_link(self.find_by_id(port.id), self.find_by_id(sub_port.port_id));
+                    });
+                  }
                 }
               }
             }
