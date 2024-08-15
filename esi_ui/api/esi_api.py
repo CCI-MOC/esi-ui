@@ -1,5 +1,7 @@
 import json
 import concurrent.futures
+from collections import defaultdict
+import itertools
 
 from django.conf import settings
 
@@ -43,8 +45,14 @@ def node_list(request):
         node_networks = {nn['node'].id: nn['network_info'] for nn in f3.result()}
 
     lease_node_list = [(lease, esi_nodes.get(lease.resource_uuid)) for lease in leases]
-    node_infos = [
-        {
+    owned_node_list = [esi_nodes.get(node) for node in esi_nodes.keys() if node not in [lease.resource_uuid for lease in leases]]
+    
+    def duration_string(start_time, end_time):
+        return start_time.replace('T', ' ', 1) + " - " + end_time.replace('T', ' ', 1)
+
+    node_to_leases = defaultdict(list)
+    for lease, e in lease_node_list:
+        node_to_leases[lease.resource].append({
             'uuid': lease.resource_uuid,
             'name': lease.resource,
             'maintenance': e.maintenance if lease.status == 'active' else '',
@@ -59,10 +67,50 @@ def node_list(request):
             'resource_class': lease.resource_class,
             'start_time': lease.start_time,
             'end_time': lease.end_time,
-            'status': lease.status
-        }
-        for lease, e in lease_node_list
-    ]
+            'status': lease.status,
+            'lease_duration': [duration_string(lease.start_time, lease.end_time)],
+            'leases': [{
+                'id': lease.id, 
+                'duration': duration_string(lease.start_time, lease.end_time), 
+                'active': lease.status == 'active', 
+                'displayText': lease.id + ' (' + duration_string(lease.start_time, lease.end_time) + ')'
+            }]
+        })
+
+    for node_name, leases in node_to_leases.items():
+        node_to_leases[node_name] = sorted(leases, key=lambda x: x['start_time'])
+
+    node_infos = []
+    for node_name, leases in node_to_leases.items():
+        combined_leases = list(itertools.chain.from_iterable([lease['leases'] for lease in leases]))
+        lease_durations = list(itertools.chain.from_iterable([lease['lease_duration'] for lease in leases]))
+
+        first_lease = leases[0]
+        first_lease['leases'] = combined_leases
+        first_lease['lease_duration'] = lease_durations
+
+        node_infos.append(first_lease)      
+
+    for node in owned_node_list:
+        node_infos.append({
+            'uuid': node.id,
+            'name': node.name,
+            'maintenance': node.maintenance,
+            'provision_state': node.provision_state,
+            'target_provision_state': node.target_provision_state,
+            'power_state': node.power_state,
+            'target_power_state': node.target_power_state,
+            'properties': [[key, value] for key, value in node.properties.items()],
+            'lease_uuid': '',
+            'owner': node.owner,
+            'lessee': node.lessee,
+            'resource_class': node.resource_class,
+            'start_time': '',
+            'end_time': '',
+            'status': 'owned',
+            'lease_duration': [],
+            'leases': []
+        })
 
     for node in node_infos:
         network_info = node_networks.get(node['uuid'])

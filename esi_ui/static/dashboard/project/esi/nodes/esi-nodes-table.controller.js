@@ -2,16 +2,18 @@
   'use strict';
 
   angular
-    .module('horizon.dashboard.project.esi')
-    .controller('horizon.dashboard.project.esi.EsiNodesTableController', controller);
+    .module('horizon.dashboard.project.esi.nodes')
+    .controller('horizon.dashboard.project.esi.nodes.EsiNodesTableController', controller);
 
   controller.$inject = [
     '$q',
     '$timeout',
-    'horizon.dashboard.project.esi.esiNodesTableService',
-    'horizon.dashboard.project.esi.nodeConfig',
-    'horizon.dashboard.project.esi.nodeFilterFacets',
+    'horizon.dashboard.project.esi.nodes.esiNodesTableService',
+    'horizon.dashboard.project.esi.nodes.nodeConfig',
+    'horizon.dashboard.project.esi.nodes.nodeFilterFacets',
     'horizon.dashboard.project.esi.nodes.manage-networks.modal.service',
+    'horizon.dashboard.project.esi.nodes.provisioning.modal.service',
+    'horizon.dashboard.project.esi.nodes.delete-leases.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
   ];
@@ -53,7 +55,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, toastService, spinnerService) {
+  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, provisioningModalService, deleteLeasesModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -98,7 +100,6 @@
         spinnerService.hideModalSpinner();
       })
       .catch(function(response) {
-        toastService.add('error', 'Unable to retrieve ESI nodes. ' + (response.data ? response.data : ''));
         spinnerService.hideModalSpinner();
       });
     }
@@ -121,53 +122,50 @@
         })
         .catch(function(response) {
           node.target_power_state = null;
-          toastService.add('error', 'Unable to set power state. ' + (response.data ? response.data : ''));
         });
       });
     }
 
     function deleteLease(nodes) {
-      spinnerService.showModalSpinner('Canceling Lease(s)');
+      var launchContext = {
+        nodes: nodes
+      };
 
-      var promises = [];
-      angular.forEach(nodes, function(node) {
-        promises.push(nodesService.deleteLease(node.lease_uuid)
+      deleteLeasesModalService.open(launchContext)
+      .then(function (response) {
+        const leasesToDelete = response.selectedLeases;
+        spinnerService.showModalSpinner('Canceling Lease(s)');
+
+        var promises = [];
+        angular.forEach(nodes, function(node) {
+          promises.push(nodesService.deleteLease(leasesToDelete[node.uuid].id)
+          .then(function(response) {
+            if (node.leases.length == 1) {
+              var i = ctrl.nodesSrc.indexOf(node);
+              if (i !== -1)
+                ctrl.nodesSrc.splice(i, 1);
+            }
+          }));
+        });
+
+        $q.all(promises)
         .then(function(response) {
-          var i = ctrl.nodesSrc.indexOf(node);
-          if (i !== -1)
-            ctrl.nodesSrc.splice(i, 1);
-        }));
-      });
-
-      $q.all(promises)
-      .then(function(response) {
-        ctrl.nodesDisplay = ctrl.nodesSrc;
-        spinnerService.hideModalSpinner();
-      })
-      .catch(function(response) {
-        ctrl.nodesDisplay = ctrl.nodesSrc;
-        toastService.add('error', 'Unable to cancel lease. ' + (response.data ? response.data : ''));
-        spinnerService.hideModalSpinner();
+          ctrl.nodesDisplay = ctrl.nodesSrc;
+          init();
+        })
+        .catch(function(response) {
+          ctrl.nodesDisplay = ctrl.nodesSrc;
+          init();
+        });
       });
     }
 
     function provision(nodes) {
-      if (nodes.length === 0) {
-        toastService.add('error', 'No nodes were selected to provision.');
-        return;
-      }
-
-      nodesService.editProvision()
+      provisioningModalService.open()
       .then(function(provision_params) {
         angular.forEach(nodes, function(node) {
           node.target_provision_state = 'active';
-          nodesService.provision(node, provision_params)
-          .then(function() {
-            toastService.add('success', 'Provisioning request sent.');
-          })
-          .catch(function(response) {
-            toastService.add('error', 'Unable to provision a node. ' + (response.data ? response.data : ''));
-          });
+          nodesService.provision(node, provision_params);
         });
 
         $timeout(init, 60000);
@@ -182,13 +180,7 @@
 
       angular.forEach(nodes, function(node) {
         node.target_provision_state = 'available';
-        nodesService.unprovision(node)
-        .then(function() {
-          toastService.add('success', 'Unprovisioning request sent.');
-        })
-        .catch(function(response) {
-          toastService.add('error', 'Unable to unprovision a node. ' + (response.data ? response.data : ''));
-        });
+        nodesService.unprovision(node);
       });
 
       $timeout(init, 60000);

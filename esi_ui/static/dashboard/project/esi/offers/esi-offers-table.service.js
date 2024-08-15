@@ -2,41 +2,34 @@
   'use strict';
 
   angular
-    .module('horizon.dashboard.project.esi')
-    .factory('horizon.dashboard.project.esi.esiOffersTableService', offersService);
+    .module('horizon.dashboard.project.esi.offers')
+    .factory('horizon.dashboard.project.esi.offers.esiOffersTableService', offersService);
     
   offersService.$inject = [
-    '$uibModal',
     'horizon.framework.util.http.service',
-    'horizon.dashboard.project.esi.basePath',
+    'horizon.framework.widgets.toast.service',
   ];
   
-  function offersService($uibModal, apiService, basePath) {
+  function offersService(apiService, toastService) {
     var service = {
       offerList: offerList,
-      editClaim: editClaim,
       offerClaim: offerClaim,
     };
     return service;
 
     function offerList() {
-      return apiService.get('/api/esi/offers/');
-    }
-
-    function editClaim() {
-      var modalConfig = {
-        backdrop: 'static',
-        keyboard: false,
-        controller: 'horizon.dashboard.project.esi.OfferModalFormController as ctrl',
-        templateUrl: basePath + 'forms/offer-modal-form.html'
-      };
-
-      return $uibModal.open(modalConfig).result;
+      return apiService.get('/api/esi/offers/').catch(err => {
+        toastService.add('error', 'Unable to retrieve ESI offers. ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      });
     }
 
     function offerClaim(offer, times) {
       console.log(times);
-      return apiService.put('/api/esi/offers/' + offer.uuid, times);
+      return apiService.put('/api/esi/offers/' + offer.uuid, times).catch(err => {
+        toastService.add('error', 'Unable to claim an offer. ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      });
     }
   }
 
