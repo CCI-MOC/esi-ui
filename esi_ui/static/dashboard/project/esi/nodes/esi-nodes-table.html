@@ -138,6 +138,16 @@
                     {$ ::'Manage Networks' | translate $}
                   </a>
                 </li>
+                <li role="presentation">
+                  <a role="menuitem"
+                     ng-if="node.status === 'active' || node.status === 'owned'"
+                     ng-click="ctrl.manageFloatingIPs(node);
+                               $event.stopPropagation();
+                               $event.preventDefault()">
+                    <span class="fa fa-pencil"></span>
+                    {$ ::'Manage Floating IPs' | translate $}
+                  </a>
+                </li>
                 <li role="presentation"
                     ng-if="(node.status === 'active' || node.status === 'owned') && node.target_provision_state === null && node.provision_state === 'available'">
                   <a role="menuitem"

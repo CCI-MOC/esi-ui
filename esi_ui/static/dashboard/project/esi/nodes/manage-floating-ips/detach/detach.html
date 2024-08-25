@@ -1,0 +1,15 @@
+<p class="step-description" translate>Please specify the floating IP and port you want to detach it from.</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="floating_ip">Floating IP (port)</label>
+  <div class="alert alert-warning"
+       ng-if="launchContext.detachable_floating_ips.length === 0"
+       translate>There are no floating IPs attached with any ports.</div>
+  <select id="floating_ip"
+          class="form-control"
+          ng-show="launchContext.detachable_floating_ips.length !== 0"
+          ng-required="currentIndex === 1"
+          ng-options="floating_ip_port for floating_ip_port in launchContext.detachable_floating_ips"
+          ng-model="stepModels.detach.floating_ip">
+  </select>
+</div>

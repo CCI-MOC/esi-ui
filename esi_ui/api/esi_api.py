@@ -134,7 +134,7 @@ def node_list(request):
                 pfws = ['%s:%s' % (pfw.internal_port, pfw.external_port)
                         for pfw in info['port_forwardings']]
                 node['floating_ips'].append(getattr(info['floating_ip'], 'floating_ip_address', '')
-                                            + ' (%s)' % ','.join(pfws) if pfws else '')
+                                            + (' (%s)' % ','.join(pfws) if pfws else ''))
 
     return node_infos
 
