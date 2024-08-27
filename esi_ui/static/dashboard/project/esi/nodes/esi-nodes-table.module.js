@@ -6,6 +6,7 @@
       'horizon.dashboard.project.esi.nodes.manage-networks',
       'horizon.dashboard.project.esi.nodes.manage-floating-ips',
       'horizon.dashboard.project.esi.nodes.provisioning',
+      'horizon.dashboard.project.esi.nodes.unprovisioning',
       'horizon.dashboard.project.esi.nodes.delete-leases'
     ])
     .config(config);

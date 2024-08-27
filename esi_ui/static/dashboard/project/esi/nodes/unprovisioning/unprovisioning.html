@@ -1,0 +1,12 @@
+<p class="step-description" translate>Are you sure you want to unprovision the selected node(s)? This action is irreversible.</p>
+
+<span ng-repeat="node in launchContext.nodes">
+  <div class="form-group">
+    <label class="control-label" translate for="node_name">{$ node.name $}</label>
+    <div class="alert alert-info">
+      <p>Node Name: {$ node.name $}</p>
+      <p>Provision State: {$ node.provision_state $}</p>
+    </div>
+  </div>
+</span>
+

@@ -14,6 +14,7 @@
     'horizon.dashboard.project.esi.nodes.manage-networks.modal.service',
     'horizon.dashboard.project.esi.nodes.manage-floating-ips.modal.service',
     'horizon.dashboard.project.esi.nodes.provisioning.modal.service',
+    'horizon.dashboard.project.esi.nodes.unprovisioning.modal.service',
     'horizon.dashboard.project.esi.nodes.delete-leases.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
@@ -56,7 +57,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, manageFloatingIPsModalService, provisioningModalService, deleteLeasesModalService, toastService, spinnerService) {
+  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, manageFloatingIPsModalService, provisioningModalService, unprovisioningModalService, deleteLeasesModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -179,13 +180,24 @@
         toastService.add('error', 'No nodes were selected to unprovision.');
         return;
       }
+      var launchContext = {
+        nodes: nodes
+      };
 
-      angular.forEach(nodes, function(node) {
-        node.target_provision_state = 'available';
-        nodesService.unprovision(node);
+      unprovisioningModalService.open(launchContext)
+      .then(function (confirmed) {
+        if (confirmed) {
+          angular.forEach(nodes, function(node) {
+            node.target_provision_state = 'deleted';
+            nodesService.unprovision(node)
+              .catch(function(error) {
+                toastService.add('error', `Failed to unprovision node ${node.name}: ${error.data}`);
+              });
+          });
+
+          $timeout(init, 60000);
+        }
       });
-
-      $timeout(init, 60000);
     }
 
     function manageNodeNetworks(node) {
