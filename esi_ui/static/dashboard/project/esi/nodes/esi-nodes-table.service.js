@@ -8,9 +8,10 @@
   nodesService.$inject = [
     'horizon.framework.util.http.service',
     'horizon.framework.widgets.toast.service',
+    'horizon.app.core.openstack-service-api.network',
   ];
   
-  function nodesService(apiService, toastService) {
+  function nodesService(apiService, toastService, networkAPI) {
     var service = {
       nodeList: nodeList,
       setPowerState: setPowerState,
@@ -19,6 +20,8 @@
       unprovision: unprovision,
       networkAttach: networkAttach,
       networkDetach: networkDetach,
+      floatingIPAttach: floatingIPAttach,
+      floatingIPDetach: floatingIPDetach,
     };
     return service;
 
@@ -73,6 +76,32 @@
         toastService.add('error', 'Unable to detach network. ' + (err.data ? err.data : ''))
         return Promise.reject(err);
       });
+    }
+
+    function floatingIPAttach(floatingIPToAttach, portID) {
+      if (floatingIPToAttach.id === 'Create new one') {
+        return networkAPI.allocateFloatingIp(floatingIPToAttach.networkID).then(response => {
+          return networkAPI.associateFloatingIp(response.data.id, portID).catch(err => {
+            toastService.add('error', 'Unable to attach floating IP. ' + (err.data ? err.data : ''))
+            return Promise.reject(err);
+          })
+        }).catch(err => {
+          toastService.add('error', 'Unable to create new a floating IP. ' + (err.data ? err.data : ''))
+          return Promise.reject(err);
+        })
+      } else {
+        return networkAPI.associateFloatingIp(floatingIPToAttach.id, portID).catch(err => {
+          toastService.add('error', 'Unable to attach floating IP. ' + (err.data ? err.data : ''))
+          return Promise.reject(err);
+        })
+      }
+    }
+
+    function floatingIPDetach(floatingIPToDetach) {
+      return networkAPI.disassociateFloatingIp(floatingIPToDetach).catch(err => {
+        toastService.add('error', 'Unable to detach floating IP. ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      })
     }
   }
 

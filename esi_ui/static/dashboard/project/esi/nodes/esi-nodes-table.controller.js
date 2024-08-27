@@ -12,6 +12,7 @@
     'horizon.dashboard.project.esi.nodes.nodeConfig',
     'horizon.dashboard.project.esi.nodes.nodeFilterFacets',
     'horizon.dashboard.project.esi.nodes.manage-networks.modal.service',
+    'horizon.dashboard.project.esi.nodes.manage-floating-ips.modal.service',
     'horizon.dashboard.project.esi.nodes.provisioning.modal.service',
     'horizon.dashboard.project.esi.nodes.delete-leases.modal.service',
     'horizon.framework.widgets.toast.service',
@@ -55,7 +56,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, provisioningModalService, deleteLeasesModalService, toastService, spinnerService) {
+  function controller($q, $timeout, nodesService, config, filterFacets, manageNetworksModalService, manageFloatingIPsModalService, provisioningModalService, deleteLeasesModalService, toastService, spinnerService) {
     var ctrl = this;
 
     ctrl.config = config;
@@ -69,6 +70,7 @@
     ctrl.provision = provision;
     ctrl.unprovision = unprovision;
     ctrl.manageNodeNetworks = manageNodeNetworks;
+    ctrl.manageFloatingIPs = manageFloatingIPs;
 
     ////////////////
 
@@ -202,6 +204,60 @@
           nodesService.networkDetach(node, response.detach)
           .then(function() {
             init();
+          });
+        }
+      });
+    }
+
+    function manageFloatingIPs(node) {
+      var launchContext = {
+        ports: [],
+        detachable_floating_ips: [],
+      };
+
+      var network_port_names = node['network_port_names'];
+      var floating_ips = node['floating_ips'];
+      for (var i = 0; i < floating_ips.length; i++) {
+        if (network_port_names[i].length > 0) {
+          if (floating_ips[i].length == 0) {
+            launchContext.ports.push(network_port_names[i]);
+          }
+          if (floating_ips[i].length > 0) {
+            launchContext.detachable_floating_ips.push(floating_ips[i] + ' (' + network_port_names[i] + ')');
+          }
+        }
+      }
+
+      manageFloatingIPsModalService.open(launchContext)
+      .then(function (response) {
+        const stepModels = response.stepModels;
+        const floatingIPs = response.floatingIPs;
+        const ports = response.ports;
+        if (stepModels.action === 'attach') {
+          spinnerService.showModalSpinner('Attaching Floating IP');
+          const floatingIPAddress = stepModels.attach.floating_ip.floating_ip_address;
+          const floatingIPId = floatingIPAddress === 'Create new one' ? 'Create new one' : floatingIPs.filter(ip => ip.ip === floatingIPAddress)[0]?.id;
+          const port = ports.filter(port => port.name === stepModels.attach.port)[0];
+          const portID = port?.id + "_" + port?.fixed_ips[0]?.ip_address;
+          const floatingIPNetworkId = floatingIPs.filter(ip => ip.ip !== 'Create new one')[0]?.floating_network_id;
+          nodesService.floatingIPAttach({
+            id: floatingIPId,
+            networkID: floatingIPNetworkId
+          }, portID)
+          .then(function() {
+            init();
+          }).catch(err => {
+            console.log(err);
+          });
+        } else {
+          spinnerService.showModalSpinner('Detaching Floating IP');
+          const floatingIPString = stepModels.detach.floating_ip.split(" ")[0];
+          const floatingIPtoDetach = floatingIPs.filter(ip => ip.ip === floatingIPString)[0]?.id;
+          nodesService.floatingIPDetach(floatingIPtoDetach)
+          .then(function() {
+            init();
+          }).catch(err => {
+            console.log(err);
           });
         }
       });

@@ -1,0 +1,43 @@
+<p class="step-description" translate>Please select a port and the floating IP you want to attach to the port of the node.</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="port_name">Port</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.ports">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+       ng-if="model.loaded.ports && launchContext.ports.length === 0"
+       translate>There are no attachable ports</div>
+  <select id="port_name"
+          class="form-control"
+          ng-required="currentIndex === 0"
+          ng-disabled="model.loaded.attachable_floating_ips && model.attachable_floating_ips.length === 0"
+          ng-show="model.loaded.ports && launchContext.ports.length !== 0"
+          ng-options="port for port in launchContext.ports"
+          ng-model="stepModels.attach.port">
+    <option value=""></option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="floating_ip">Floating IP</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.attachable_floating_ips">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+       ng-if="model.loaded.attachable_floating_ips && model.attachable_floating_ips.length === 0"
+       translate>There are no attachable floating IPs</div>
+  <select id="floating_ip"
+          class="form-control"
+          ng-show="model.attachable_floating_ips.length !== 0"
+          ng-disabled="!stepModels.attach.port"
+          ng-required="currentIndex === 0"
+          ng-options="floating_ip.floating_ip_address for floating_ip in model.attachable_floating_ips"
+          ng-model="stepModels.attach.floating_ip">
+      <option value=""></option>
+  </select>
+</div>
