@@ -8,7 +8,7 @@
   <select id="port_name"
           class="form-control"
           ng-required="currentIndex === 1"
-          ng-if="launchContext.node.detachable_ports.length !== 0"
+          ng-show="launchContext.node.detachable_ports.length !== 0"
           ng-options="port for port in launchContext.node.detachable_ports"
           ng-model="stepModels.detach.port">
     <option value=""></option>
