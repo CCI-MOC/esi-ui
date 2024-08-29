@@ -40,6 +40,15 @@
     }
 
     function submit(stepModels) {
+      if (stepModels.keypair) {
+        stepModels.ssh_keys = [stepModels.keypair.trim()];
+        delete stepModels.keypair;
+      }
+      if (stepModels.network) {
+        stepModels.nics = [{network: stepModels.network}];
+        delete stepModels.network;
+      }
+
       return Promise.resolve(stepModels);
     }
 
