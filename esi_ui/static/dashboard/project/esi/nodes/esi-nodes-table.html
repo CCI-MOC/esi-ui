@@ -131,6 +131,7 @@
                 <li role="presentation">
                   <a role="menuitem"
                      ng-if="node.status === 'active' || node.status === 'owned'"
+                     ng-disabled="node.network_operation !== null"
                      ng-click="ctrl.manageNodeNetworks(node);
                                $event.stopPropagation();
                                $event.preventDefault()">
@@ -236,16 +237,19 @@
                       <br ng-repeat="_ in node['network_names'][$index]">
                       <br ng-if="node['network_names'][$index].length === 0">
                     </span>
+
                     <hr ng-if="$index + 1 !== node['network_names'].length" style="margin-top: 10px; margin-bottom: 10px">
                   </dd>
                 </dl>
               </div>
+              <div ng-if="node.network_operation !== null" class="progress-text horizon-loading-bar col-sm-2">
+                <div class="progress progress-striped active">
+                  <div class="progress-bar"></div>
+                </div>
+                {$ node.network_operation $} 
+              </div>
             </div>
           </td>
-        </tr>
-        <tr hz-no-items ng-if="!ctrl.config.needsFilterFirst" message="ctrl.config.noItemsMessage" items="ctrl.nodesDisplay"></tr>
-        <tr>
-          <td colspan="100" class="no-rows-help" ng-if="ctrl.config.needsFilterFirst" translate>{$ 'Please provide a search criteria first.' $}</td>
         </tr>
       </tbody>
 

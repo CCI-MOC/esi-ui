@@ -87,6 +87,7 @@
 
         var in_provision_transition = false;
         ctrl.nodesSrc.forEach(function(node) {
+          node.network_operation = null; 
           if (PROVISION_ERROR_STATES.has(node.provision_state)) {
             return;
           }
@@ -202,23 +203,56 @@
 
     function manageNodeNetworks(node) {
       var launchContext = {
-        node: node
+       node: node
       };
-
+     
+      if (ctrl.networkOperationInProgress) {
+       return;
+      }
+     
+      ctrl.networkOperationInProgress = true;
+     
       manageNetworksModalService.open(launchContext)
-      .then(function (response) {
+       .then(function(response) {
         if (response.action === 'attach') {
-          nodesService.networkAttach(node, response.attach)
+         node.network_operation = 'attaching';
+         toastService.add('success', 'Attaching network, please wait...');
+     
+         nodesService.networkAttach(node, response.attach)
           .then(function() {
-            init();
+           return init();
+          })
+          .then(function() {
+           node.network_operation = null;
+           toastService.add('success', 'Network attached successfully.');
+           ctrl.networkOperationInProgress = false;
+          })
+          .catch(function() {
+           node.network_operation = null;
+           toastService.add('error', 'Failed to attach network.');
+           ctrl.networkOperationInProgress = false;
           });
-        } else {
-          nodesService.networkDetach(node, response.detach)
+     
+        } else if (response.action === 'detach') {
+         node.network_operation = 'detaching';
+         toastService.add('success', 'Detaching network, please wait...');
+     
+         nodesService.networkDetach(node, response.detach)
           .then(function() {
-            init();
+           return init();
+          })
+          .then(function() {
+           node.network_operation = null;
+           toastService.add('success', 'Network detached successfully.');
+           ctrl.networkOperationInProgress = false;
+          })
+          .catch(function() {
+           node.network_operation = null;
+           toastService.add('error', 'Failed to detach network.');
+           ctrl.networkOperationInProgress = false;
           });
         }
-      });
+       });
     }
 
     function manageFloatingIPs(node) {
