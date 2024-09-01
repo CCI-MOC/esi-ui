@@ -40,59 +40,15 @@ def node_list(request):
         f1 = executor.submit(connection.lease.nodes)
         f2 = executor.submit(connection.lease.leases)
         f3 = executor.submit(nodes.network_list, connection)
-        esi_nodes = {e.id: e for e in f1.result()}
-        leases = list(f2.result())
+        nodes_generator = f1.result()
+        node_leases_dict = defaultdict(list)
+        for lease in f2.result():
+            node_leases_dict[lease.resource_uuid].append(lease)
         node_networks = {nn['node'].id: nn['network_info'] for nn in f3.result()}
 
-    lease_node_list = [(lease, esi_nodes.get(lease.resource_uuid)) for lease in leases]
-    owned_node_list = [esi_nodes.get(node) for node in esi_nodes.keys() if node not in [lease.resource_uuid for lease in leases]]
-    
-    def duration_string(start_time, end_time):
-        return start_time.replace('T', ' ', 1) + " - " + end_time.replace('T', ' ', 1)
-
-    node_to_leases = defaultdict(list)
-    for lease, e in lease_node_list:
-        node_to_leases[lease.resource].append({
-            'uuid': lease.resource_uuid,
-            'name': lease.resource,
-            'maintenance': e.maintenance if lease.status == 'active' else '',
-            'provision_state': e.provision_state if lease.status == 'active' else '',
-            'target_provision_state': e.target_provision_state if lease.status == 'active' else '',
-            'power_state': e.power_state if lease.status == 'active' else '',
-            'target_power_state': e.target_power_state if lease.status == 'active' else '', 
-            'properties': [[key, value] for key, value in lease.resource_properties.items()],
-            'lease_uuid': lease.id,
-            'owner': lease.owner,
-            'lessee': e.lessee if lease.status == 'active' else '',
-            'resource_class': lease.resource_class,
-            'start_time': lease.start_time,
-            'end_time': lease.end_time,
-            'status': lease.status,
-            'lease_duration': [duration_string(lease.start_time, lease.end_time)],
-            'leases': [{
-                'id': lease.id, 
-                'duration': duration_string(lease.start_time, lease.end_time), 
-                'active': lease.status == 'active', 
-                'displayText': lease.id + ' (' + duration_string(lease.start_time, lease.end_time) + ')'
-            }]
-        })
-
-    for node_name, leases in node_to_leases.items():
-        node_to_leases[node_name] = sorted(leases, key=lambda x: x['start_time'])
-
-    node_infos = []
-    for node_name, leases in node_to_leases.items():
-        combined_leases = list(itertools.chain.from_iterable([lease['leases'] for lease in leases]))
-        lease_durations = list(itertools.chain.from_iterable([lease['lease_duration'] for lease in leases]))
-
-        first_lease = leases[0]
-        first_lease['leases'] = combined_leases
-        first_lease['lease_duration'] = lease_durations
-
-        node_infos.append(first_lease)      
-
-    for node in owned_node_list:
-        node_infos.append({
+    esi_nodes = []
+    for node in nodes_generator:
+        esi_node = {
             'uuid': node.id,
             'name': node.name,
             'maintenance': node.maintenance,
@@ -100,43 +56,78 @@ def node_list(request):
             'target_provision_state': node.target_provision_state,
             'power_state': node.power_state,
             'target_power_state': node.target_power_state,
-            'properties': [[key, value] for key, value in node.properties.items()],
-            'lease_uuid': '',
-            'owner': node.owner,
-            'lessee': node.lessee,
             'resource_class': node.resource_class,
-            'start_time': '',
-            'end_time': '',
-            'status': 'owned',
-            'lease_duration': [],
-            'leases': []
-        })
+            'properties': [[key, value] for key, value in node.properties.items()],
+            'owner': node.owner,
+            'leases': sorted((
+                {
+                    'uuid': lease.id,
+                    'project': lease.project,
+                    'start_time': lease.start_time.replace('T', ' ', 1)[0:19],
+                    'end_time': lease.end_time.replace('T', ' ', 1)[0:19],
+                    'status': lease.status,
+                } for lease in node_leases_dict[node.id]
+            ), key=lambda x: x['start_time']),
+            'mac_addresses': [],
+            'network_port_names': [],
+            'network_names': [],
+            'fixed_ips': [],
+            'floating_networks': [],
+            'floating_ips': [],
+        }
+        del node_leases_dict[node.id]
 
-    for node in node_infos:
-        network_info = node_networks.get(node['uuid'])
-        
-        node['mac_addresses'] = []
-        node['network_port_names'] = []
-        node['network_names'] = []
-        node['fixed_ips'] = []
-        node['floating_networks'] = []
-        node['floating_ips'] = []
-        if node['status'] == 'active' and network_info:
+        network_info = node_networks.get(node.id)
+        if network_info:
             for info in network_info:
-                node['mac_addresses'].append(info['baremetal_port'].address)
-                node['network_port_names'].append(info['network_ports'][0].name
+                esi_node['mac_addresses'].append(info['baremetal_port'].address)
+                esi_node['network_port_names'].append(info['network_ports'][0].name
                                                   if len(info['network_ports']) else '')
                 networks = [info['networks']['parent']] + info['networks']['trunk']
-                node['network_names'].append([network.name for network in networks if network] or '')
-                node['fixed_ips'].append([ip['ip_address'] for port in info['network_ports']
+                esi_node['network_names'].append([network.name for network in networks if network] or '')
+                esi_node['fixed_ips'].append([ip['ip_address'] for port in info['network_ports']
                                           for ip in port.fixed_ips] or '')
-                node['floating_networks'].append(getattr(info['networks']['floating'], 'name', ''))
+                esi_node['floating_networks'].append(getattr(info['networks']['floating'], 'name', ''))
                 pfws = ['%s:%s' % (pfw.internal_port, pfw.external_port)
                         for pfw in info['port_forwardings']]
-                node['floating_ips'].append(getattr(info['floating_ip'], 'floating_ip_address', '')
+                esi_node['floating_ips'].append(getattr(info['floating_ip'], 'floating_ip_address', '')
                                             + (' (%s)' % ','.join(pfws) if pfws else ''))
 
-    return node_infos
+        esi_nodes.append(esi_node)
+
+    for leases in node_leases_dict.values():
+        esi_nodes.append(
+            {
+                'uuid': leases[0].resource_uuid,
+                'name': leases[0].resource,
+                'maintenance': '',
+                'provision_state': '',
+                'target_provision_state': '',
+                'power_state': '',
+                'target_power_state': '',
+                'resource_class': leases[0].resource_class,
+                'properties': [[key, value] for key, value in leases[0].properties.items()],
+                'owner': leases[0].owner,
+                'leases': sorted((
+                    {
+                        'uuid': lease.id,
+                        'project': lease.project,
+                        'start_time': lease.start_time.replace('T', ' ', 1)[0:19],
+                        'end_time': lease.end_time.replace('T', ' ', 1)[0:19],
+                        'status': lease.status,
+                        'displayText': lease.id + ' (' + lease.start_time.replace('T', ' ', 1)[0:19] + ' - ' + lease.end_time.replace('T', ' ', 1)[0:19] + ')',
+                    } for lease in leases
+                ), key=lambda x: x['start_time']),
+                'mac_addresses': [],
+                'network_port_names': [],
+                'network_names': [],
+                'fixed_ips': [],
+                'floating_networks': [],
+                'floating_ips': [],
+            }
+        )
+
+    return esi_nodes
 
 
 def deploy_node(request, node):
@@ -200,10 +191,10 @@ def offer_list(request):
             'resource': offer.resource,
             'resource_class': offer.resource_class,
             'status': offer.status,
-            'start_time': offer.start_time.replace('T', ' ', 1),
-            'end_time': offer.end_time.replace('T', ' ', 1),
+            'start_time': offer.start_time.replace('T', ' ', 1)[0:19],
+            'end_time': offer.end_time.replace('T', ' ', 1)[0:19],
             'uuid': offer.uuid,
-            'availabilities': [[avail[0].replace('T', ' ', 1), avail[1].replace('T', ' ', 1)] for avail in offer.availabilities],
+            'availabilities': [[avail[0].replace('T', ' ', 1)[0:19], avail[1].replace('T', ' ', 1)[0:19]] for avail in offer.availabilities],
             'resource_properties': [[key, value] for key, value in offer.resource_properties.items()],
         }
         for offer in offers
