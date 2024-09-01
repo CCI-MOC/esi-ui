@@ -1,0 +1,37 @@
+<p class="step-description" translate>Please provide a time period for the offer</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="start">Start Time (UTC)</label>
+  <br>
+  <input type="date" id="start" ng-required="stepModels.end_time" ng-model="stepModels.start_date" />
+  <input type="time" id="start" ng-required="stepModels.start_date" ng-model="stepModels.start_time" />
+  <span translate>Default: now</span>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="end">End Time (UTC)</label>
+  <br>
+  <input type="date" id="end" ng-required="stepModels.start_time" ng-model="stepModels.end_date" />
+  <input type="time" id="end" ng-required="stepModels.end_date" ng-model="stepModels.end_time" />
+  <span translate>Default: until canceled</span>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="resource">Resource</label>
+  <div class="horizon-loading-bar" ng-if="!model.loaded.nodes">
+    <div class="progress progress-striped active">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+  <div class="alert alert-warning"
+      ng-if="model.loaded.nodes && model.nodes.length === 0"
+      translate>There are no nodes</div>
+  <select id="resource"
+          class="form-control"
+          ng-show="model.loaded.nodes && model.nodes.length !== 0"
+          ng-required="true"
+          ng-options="node.uuid as node.name for node in model.nodes"
+          ng-model="stepModels.resource_uuid">
+    <option value=""></option>
+  </select>
+</div>

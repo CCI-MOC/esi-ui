@@ -5,12 +5,12 @@ import horizon
 class Lessee(horizon.PanelGroup):
     slug = "lessee"
     name = _("Lessee")
-    panels = ("nodes", "offers", "baremetal_topology")
+    panels = ("nodes", "lessee_offers", "baremetal_topology")
 
 class Owner(horizon.PanelGroup):
     slug = "owner"
     name = _("Owner")
-    panels = ("leases",)
+    panels = ("leases", "owner_offers")
 
 class Esi(horizon.Dashboard):
     name = _("ESI")

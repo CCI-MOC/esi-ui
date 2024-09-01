@@ -1,0 +1,140 @@
+<div ng-controller="horizon.dashboard.esi.owner.offers.EsiOffersTableController as ctrl">
+  <hz-magic-search-context filter-facets="ctrl.filterFacets">
+    <div hz-table
+      track-rows-by="ctrl.config.trackId"
+      ng-cloak
+      st-magic-search
+      st-table="ctrl.offersDisplay"
+      st-safe-src="ctrl.offersSrc"
+      class="hz-magic-search-context">
+
+      <div class="row">
+        <div class="hz-dynamic-table-preamble col-xs-12">
+          <hz-magic-search-bar class="hz-magic-search-bar" ng-if="ctrl.filterFacets"></hz-magic-search-bar>
+          <action-list>
+            <button class="btn btn-default"
+                    ng-class="actionClasses"
+                    ng-click="ctrl.createOffer();
+                              $event.stopPropagation();">
+              {$ ::'Create Offers' | translate $}
+            </button>
+          </action-list>
+          <action-list>
+            <button class="btn btn-danger"
+                    ng-class="actionClasses"
+                    ng-disabled="tCtrl.selected.length === 0"
+                    ng-click="ctrl.deleteOffer(tCtrl.selected);
+                              $event.stopPropagation();">
+              <span class="fa fa-trash"></span>
+              {$ ::'Delete Offers' | translate $}
+            </button>
+          </action-list>
+        </div>
+      </div>
+
+      <table class="table table-striped table-rsp table-detail">
+        <thead>
+          <tr>
+            <!--
+              This is where we display number of items and pagination controls in
+              the header.
+            -->
+            <td hz-table-footer colspan="100" items="ctrl.offersDisplay"></td>
+          </tr>
+          <tr>
+            <!--
+              Table-column-headers:
+              Set selectAll to True if you want to enable select all checkbox.
+              Set expand to True if you want to inline details.
+            -->
+            <th ng-show="ctrl.config.selectAll" class="multi_select_column">
+              <div class="themable-checkbox">
+                <input type="checkbox" id="esi-offers-table-select-all" hz-select-all="ctrl.offersDisplay">
+                <label for="esi-offers-table-select-all"></label>
+              </div>
+            </th>
+            <th ng-show="ctrl.config.expand" class="expander"></th>
+            <th ng-repeat="column in ctrl.config.columns"
+              class="rsp-p{$ column.priority $}"
+              st-sort="{$ column.id $}"
+              ng-attr-st-sort-default="{$ column.sortDefault $}"
+              translate>
+              {$ column.title $}
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!--
+            Table-rows:
+            classes rsp-p1 rsp-p2 are responsive priority as user resizes window.
+          -->
+          <tr ng-repeat-start="offer in ctrl.offersDisplay track by offer[ctrl.config.trackId]">
+            <td ng-show="ctrl.config.selectAll" class="multi_select_column">
+              <div class="themable-checkbox">
+                <input type="checkbox"
+                      id="{$ offer[ctrl.config.trackId] $}"
+                      ng-model="tCtrl.selections[offer[ctrl.config.trackId]].checked"
+                      hz-select="offer">
+                <label for="{$ offer[ctrl.config.trackId] $}"></label>
+              </div>
+            </td>
+            <td ng-show="ctrl.config.expand" class="expander">
+              <span class="fa fa-chevron-right"
+                hz-expand-detail
+                duration="200">
+              </span>
+            </td>
+            <td class="rps-p2"
+                ng-repeat="column in ctrl.config.columns">{$ offer[column.id] $}</td>
+            <td class="actions_column">
+          <action-list>
+            <button class="btn btn-danger"
+                    ng-class="actionClasses"
+                    ng-click="ctrl.deleteOffer([offer]);
+                              $event.stopPropagation();">
+              <span class="fa fa-trash"></span>
+              {$ ::'Delete Offer' | translate $}
+            </button>
+          </action-list>
+            </td>
+          </tr>
+
+          <!--
+            Detail-row:
+            Contains detailed information on this item.
+            Can be toggled using the chevron button.
+            Ensure colspan is greater or equal to number of column-headers.
+          -->
+          <tr ng-if="ctrl.config.expand" ng-repeat-end class="detail-row">
+            <td class="detail" colspan="100">
+              <h4>{$ ::'Current & Future Offers' | translate $}</h4>
+              <div class="row">
+                <div class="table-rsp">
+                  <dl class="col-sm-3" ng-repeat="column in ctrl.config.offer_details" style="width: fit-content">
+                    <dt>{$ column.title $}</dt>
+                    <dd ng-repeat="offer in offer.offers track by $index">
+                      <b ng-if="$index === 0">{$ offer[column.id] $}</b>
+                      <span ng-if="$index !== 0">{$ offer[column.id] $}</span>
+                    </dd>
+                  </dl>
+                  <dl>
+                    <dt translate>Properties</dt>
+                    <dd ng-repeat="prop in offer.resource_properties">{$ prop[0] $}: {$ prop[1] $}</dd>
+                  </dl>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!--
+          Table-footer:
+          This is where we display number of items and pagination controls.
+        -->
+        <tfoot hz-table-footer items="ctrl.offersDisplay"></tfoot>
+      </table>
+    </div>
+  </hz-magic-search-context>
+</div>
