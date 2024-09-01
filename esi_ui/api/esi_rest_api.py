@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django.views import generic
 
 from esi_ui.api import esi_api
@@ -9,6 +11,8 @@ from openstack_dashboard.api.rest import utils as rest_utils
 
 LOGICAL_NAME_PATTERN = '[a-zA-Z0-9-._~]+'
 
+DEFAULT_LEASE_TIME = '7 days from lease start time'
+
 
 @urls.register
 class Nodes(generic.View):
@@ -19,7 +23,8 @@ class Nodes(generic.View):
     def get(self, request):
         nodes = esi_api.node_list(request)
         return {
-            'nodes': nodes
+            'nodes': nodes,
+            'default_lease_time': getattr(settings, 'DEFAULT_LEASE_TIME', DEFAULT_LEASE_TIME),
         }
 
 
@@ -106,9 +111,19 @@ class Offer(generic.View):
 
 
 @urls.register
+class Leases(generic.View):
+
+    url_regex = r'esi/leases/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def post(self, request):
+        return esi_api.create_lease(request)
+
+
+@urls.register
 class Lease(generic.View):
 
-    url_regex = r'esi/lease/(?P<lease>{})$'.format(LOGICAL_NAME_PATTERN)
+    url_regex = r'esi/leases/(?P<lease>{})$'.format(LOGICAL_NAME_PATTERN)
 
     @rest_utils.ajax()
     def delete(self, request, lease):

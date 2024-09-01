@@ -2,7 +2,10 @@
   'use strict';
 
   angular
-    .module('horizon.dashboard.esi.owner.leases', [])
+    .module('horizon.dashboard.esi.owner.leases', [
+      'horizon.dashboard.esi.create-leases',
+      'horizon.dashboard.esi.delete-leases',
+    ])
     .config(config);
 
   config.$inject = [
@@ -22,7 +25,14 @@
         {id: 'name', title: 'Name', priority: 1, sortDefault: true},
         {id: 'resource_class', title: 'Resource Class', priority: 1},
         {id: 'maintenance', title: 'Maintenance', priority: 1},
+        {id: 'leases', title: 'Lessee', priority: 1},
         {id: 'lease_duration', title: 'Lease Duration', priority: 1},
+      ],
+      lease_details: [
+        {id: 'start_time', title: 'Start Time (UTC)'},
+        {id: 'end_time', title: 'End Time (UTC)'},
+        {id: 'project', title: 'Lessee'},
+        {id: 'uuid', title: 'UUID'},
       ],
     });
 
@@ -38,38 +48,13 @@
         singleton: true
       },
       {
-        label: gettext('Owner'),
-        name: 'owner',
-        singleton: true
-      },
-      {
-        label: gettext('Lessee'),
-        name: 'lessee',
-        singleton: true
-      },
-      {
-        label: gettext('Resource Class'),
-        name: 'resource_class',
-        singleton: true
-      },
-      {
-        label: gettext('Provision State'),
-        name: 'provision_state',
-        singleton: true
-      },
-      {
-        label: gettext('Power State'),
-        name: 'power_state',
-        singleton: true
-      },
-      {
         label: gettext('Maintenance'),
         name: 'maintenance',
         singleton: true
       },
       {
-        label: gettext('Lease Status'),
-        name: 'status',
+        label: gettext('Resource Class'),
+        name: 'resource_class',
         singleton: true
       },
       {

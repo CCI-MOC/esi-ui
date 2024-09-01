@@ -18,7 +18,7 @@
           {
             id: 'delete',
             title: gettext('Delete'),
-            templateUrl: basePath + 'delete.html',
+            templateUrl: basePath + 'delete-leases.html',
             formName: 'deleteLeaseForm'
           },
         ],
