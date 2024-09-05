@@ -166,39 +166,80 @@
 
     function provision(nodes) {
       provisioningModalService.open()
-      .then(function(provision_params) {
-        angular.forEach(nodes, function(node) {
-          node.target_provision_state = 'active';
-          nodesService.provision(node, provision_params);
+        .then(function(provision_params) {
+          angular.forEach(nodes, function(node) {
+            node.is_operation_initiated = true;
+            node.target_provision_state = 'in progress';
+    
+            nodesService.provision(node, provision_params)
+              .then(function() {
+                return pollNodeStatus(node);
+              })
+              .catch(function(error) {
+                node.target_provision_state = null;
+                node.is_operation_initiated = false;
+                toastService.add('error', `Failed to provision node ${node.name}: ${error.data}`);
+              });
+          });
         });
-
-        $timeout(init, 60000);
-      });
     }
-
+    
     function unprovision(nodes) {
-      if (nodes.length === 0) {
-        toastService.add('error', 'No nodes were selected to unprovision.');
-        return;
-      }
       var launchContext = {
         nodes: nodes
       };
-
+    
       unprovisioningModalService.open(launchContext)
-      .then(function (confirmed) {
-        if (confirmed) {
-          angular.forEach(nodes, function(node) {
-            node.target_provision_state = 'deleted';
-            nodesService.unprovision(node)
-              .catch(function(error) {
-                toastService.add('error', `Failed to unprovision node ${node.name}: ${error.data}`);
-              });
-          });
-
-          $timeout(init, 60000);
+        .then(function(confirmed) {
+          if (confirmed) {
+            angular.forEach(nodes, function(node) {
+              node.is_operation_initiated = true;
+              node.target_provision_state = 'in progress';
+    
+              nodesService.unprovision(node)
+                .then(function() {
+                  return pollNodeStatus(node);
+                })
+                .catch(function(error) {
+                  node.target_provision_state = null;
+                  node.is_operation_initiated = false;
+                  toastService.add('error', `Failed to unprovision node ${node.name}: ${error.data}`);
+                });
+            });
+          }
+        });
+    }
+    
+    function pollNodeStatus(node) {
+      const stopPolling = (errorMessage) => {
+        node.target_provision_state = null;
+        node.is_operation_initiated = false;
+        if (errorMessage) {
+          toastService.add('error', errorMessage);
         }
-      });
+      };
+    
+      const checkStatus = function() {
+        nodesService.nodeList()
+          .then(function(response) {
+            var updatedNode = response.data.nodes.find(n => n.uuid === node.uuid);
+            node.provision_state = updatedNode.provision_state;
+            node.target_provision_state = updatedNode.target_provision_state;
+    
+            if (PROVISION_ERROR_STATES.has(node.provision_state)) {
+              stopPolling(`Deployment failed for node ${node.name}`);
+            } else if (PROVISION_STABLE_STATES.has(node.provision_state)) {
+              stopPolling();
+            } else {
+              $timeout(checkStatus, REFRESH_RATE);
+            }
+          })
+          .catch(function(error) {
+            stopPolling(`Failed to update node status for ${node.name}: ${error.data}`);
+          });
+      };
+    
+      checkStatus();
     }
 
     function manageNodeNetworks(node) {
