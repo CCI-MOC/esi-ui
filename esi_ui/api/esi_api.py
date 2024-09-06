@@ -5,36 +5,45 @@ import itertools
 
 from django.conf import settings
 
-from esi import connection
-from esi.lib import nodes
-
+from keystoneauth1 import session
+from keystoneauth1.identity.v3 import token as v3_token
 from metalsmith import _provisioner
 from metalsmith import instance_config
 from openstack import config
 from horizon.utils.memoized import memoized  # noqa
+
+from esi import connection
+from esi.lib import nodes
 
 
 DEFAULT_OPENSTACK_KEYSTONE_URL = 'http://127.0.0.1/identity/v3'
 
 
 @memoized
-def get_session_from_token(token):
+def get_session_from_request(request):
     auth_url = getattr(settings, 'OPENSTACK_KEYSTONE_URL', DEFAULT_OPENSTACK_KEYSTONE_URL)
     region = config.get_cloud_region(load_yaml_config=False,
                                      load_envvars=False,
                                      auth_type='token',
                                      token=token,
                                      auth_url=auth_url)
-    return region.get_session()
+    user_session = region.get_session()
+    if not user_session.auth.get_access(user_session).project_scoped:
+       auth = v3_token.Token(
+           auth_url=auth_url,
+           token=user_session.get_token(),
+           project_id=request.user.project_id)
+       user_session = session.Session(auth=auth)
+    return user_session
 
 
 @memoized
-def esiclient(token):
-    return connection.ESIConnection(session=get_session_from_token(token))
+def esiclient(request):
+    return connection.ESIConnection(session=get_session_from_request(request))
 
 
 def node_list(request):
-    connection = esiclient(token=request.user.token.id)
+    connection = esiclient(request)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         f1 = executor.submit(connection.lease.nodes)
@@ -158,33 +167,29 @@ def set_power_state(request, node, target):
     @param node_id: Either the node name or node uuid.
     @param state: The state the node should change to. It should be one of: ["power on", "power off", "rebooting", "soft power off", "soft rebooting"]
     """
-    token = request.user.token.id
-
-    esiclient(token=token).baremetal.set_node_power_state(node=node, target=target)
+    esiclient(request).baremetal.set_node_power_state(node=node, target=target)
 
     if target[0] == 's':
         target = target.split(' ', 1)[1]
 
-    return esiclient(token=token).baremetal.wait_for_node_power_state(node=node, expected_state=target)
+    return esiclient(request).baremetal.wait_for_node_power_state(node=node, expected_state=target)
 
 
 def network_attach(request, node):
-    connection = esiclient(token=request.user.token.id)
+    connection = esiclient(request)
     attach_info = json.loads(request.body.decode('utf-8'))
 
     return nodes.network_attach(connection, node, attach_info)
 
 
 def network_detach(request, node, vif):
-    connection = esiclient(token=request.user.token.id)
+    connection = esiclient(request)
 
     return nodes.network_detach(connection, node, port=vif)
 
 
 def offer_list(request):
-    token = request.user.token.id
-
-    offers = esiclient(token=token).list_offers()
+    offers = esiclient(request).list_offers()
 
     return [
         {
@@ -202,7 +207,6 @@ def offer_list(request):
 
 
 def offer_claim(request, offer):
-    token = request.user.token.id
     times = json.loads(request.body.decode('utf-8'))
 
     if times['start_time'] is None:
@@ -210,10 +214,8 @@ def offer_claim(request, offer):
     if times['end_time'] is None:
         del times['end_time']
 
-    return esiclient(token=token).claim_offer(offer, **times)
+    return esiclient(request).claim_offer(offer, **times)
 
 
 def delete_lease(request, lease):
-    token = request.user.token.id
-
-    return esiclient(token=token).lease.delete_lease(lease)
+    return esiclient(request).lease.delete_lease(lease)
