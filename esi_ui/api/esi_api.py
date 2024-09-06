@@ -5,13 +5,17 @@ import itertools
 
 from django.conf import settings
 
-from esi import connection
-from esi.lib import nodes
-
+from keystoneauth1 import session
+from keystoneauth1 import token_endpoint
 from metalsmith import _provisioner
 from metalsmith import instance_config
 from openstack import config
+from openstack_auth import utils as auth_utils
+from openstack_dashboard.api import base
 from horizon.utils.memoized import memoized  # noqa
+
+from esi import connection
+from esi.lib import nodes
 
 
 DEFAULT_OPENSTACK_KEYSTONE_URL = 'http://127.0.0.1/identity/v3'
@@ -29,17 +33,40 @@ def get_session_from_token(token):
 
 
 @memoized
-def esiclient(token):
-    return connection.ESIConnection(session=get_session_from_token(token))
+def openstackclient(request):
+    return connection.ESIConnection(session=get_session_from_token(request.user.token.id))
+
+
+@memoized
+def esiclient(request):
+    token=request.user.token.id
+    insecure = settings.OPENSTACK_SSL_NO_VERIFY
+    cacert = settings.OPENSTACK_SSL_CACERT
+    verify = cacert if not insecure else False
+
+    token_auth = token_endpoint.Token(
+        endpoint=base.url_for(request, 'lease'),
+        token=token)
+    k_session = session.Session(
+        auth=token_auth,
+        original_ip=auth_utils.get_client_ip(request),
+        verify=verify,
+    )
+    return connection.ESIConnection(
+        session=k_session,
+        region_name=request.user.services_region,
+        app_name='horizon', app_version='1.0'
+    )
 
 
 def node_list(request):
-    connection = esiclient(token=request.user.token.id)
+    esi_connection = esiclient(request)
+    openstack_connection = openstackclient(request)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        f1 = executor.submit(connection.lease.nodes)
-        f2 = executor.submit(connection.lease.leases)
-        f3 = executor.submit(nodes.network_list, connection)
+        f1 = executor.submit(esi_connection.lease.nodes)
+        f2 = executor.submit(esi_connection.lease.leases)
+        f3 = executor.submit(nodes.network_list, openstack_connection)
         esi_nodes = {e.id: e for e in f1.result()}
         leases = list(f2.result())
         node_networks = {nn['node'].id: nn['network_info'] for nn in f3.result()}
@@ -167,33 +194,29 @@ def set_power_state(request, node, target):
     @param node_id: Either the node name or node uuid.
     @param state: The state the node should change to. It should be one of: ["power on", "power off", "rebooting", "soft power off", "soft rebooting"]
     """
-    token = request.user.token.id
-
-    esiclient(token=token).baremetal.set_node_power_state(node=node, target=target)
+    openstackclient(request).baremetal.set_node_power_state(node=node, target=target)
 
     if target[0] == 's':
         target = target.split(' ', 1)[1]
 
-    return esiclient(token=token).baremetal.wait_for_node_power_state(node=node, expected_state=target)
+    return openstackclient(request).baremetal.wait_for_node_power_state(node=node, expected_state=target)
 
 
 def network_attach(request, node):
-    connection = esiclient(token=request.user.token.id)
+    connection = openstackclient(request)
     attach_info = json.loads(request.body.decode('utf-8'))
 
     return nodes.network_attach(connection, node, attach_info)
 
 
 def network_detach(request, node, vif):
-    connection = esiclient(token=request.user.token.id)
+    connection = openstackclient(request)
 
     return nodes.network_detach(connection, node, port=vif)
 
 
 def offer_list(request):
-    token = request.user.token.id
-
-    offers = esiclient(token=token).list_offers()
+    offers = esiclient(request).list_offers()
 
     return [
         {
@@ -211,7 +234,6 @@ def offer_list(request):
 
 
 def offer_claim(request, offer):
-    token = request.user.token.id
     times = json.loads(request.body.decode('utf-8'))
 
     if times['start_time'] is None:
@@ -219,10 +241,8 @@ def offer_claim(request, offer):
     if times['end_time'] is None:
         del times['end_time']
 
-    return esiclient(token=token).claim_offer(offer, **times)
+    return esiclient(request).claim_offer(offer, **times)
 
 
 def delete_lease(request, lease):
-    token = request.user.token.id
-
-    return esiclient(token=token).lease.delete_lease(lease)
+    return esiclient(request).lease.delete_lease(lease)

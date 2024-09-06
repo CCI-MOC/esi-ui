@@ -14,7 +14,7 @@ class IndexView(generic.TemplateView):
 class ESIJSONView(topology_view.JSONView):
     def _get_servers(self, request):
         try:
-            node_networks = nodes.network_list(esi_api.esiclient(request.user.token.id))
+            node_networks = nodes.network_list(esi_api.openstackclient(request))
         except Exception:
             node_networks = []
 
@@ -35,12 +35,11 @@ class ESIJSONView(topology_view.JSONView):
         return data
 
     def _get_ports(self, request, networks):
-        token = request.user.token.id
         try:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                f1 = executor.submit(esi_api.esiclient(token).network.ports)
-                f2 = executor.submit(esi_api.esiclient(token).baremetal.ports, details=True)
-                f3 = executor.submit(esi_api.esiclient(token).network.ips)
+                f1 = executor.submit(esi_api.openstackclient(request).network.ports)
+                f2 = executor.submit(esi_api.openstackclient(request).baremetal.ports, details=True)
+                f3 = executor.submit(esi_api.openstackclient(request).network.ips)
                 network_ports = list(f1.result())
                 port_name_dict = {port.id: port.name for port in network_ports}
                 
