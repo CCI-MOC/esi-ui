@@ -2,15 +2,15 @@
     'use strict';
   
     angular
-      .module('horizon.dashboard.esi.lessee.nodes.delete-leases')
+      .module('horizon.dashboard.esi.delete-leases')
       .factory(
-        'horizon.dashboard.esi.lessee.nodes.delete-leases.modal.service',
+        'horizon.dashboard.esi.delete-leases.modal.service',
         DeleteLeasesModalService
       );
   
     DeleteLeasesModalService.$inject = [
       '$uibModal',
-      'horizon.dashboard.esi.lessee.nodes.delete-leases.modal-spec'
+      'horizon.dashboard.esi.delete-leases.modal-spec'
     ];
   
     function DeleteLeasesModalService($uibModal, modalSpec) {

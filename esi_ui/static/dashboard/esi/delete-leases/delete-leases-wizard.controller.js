@@ -2,12 +2,12 @@
     'use strict';
   
     angular
-      .module('horizon.dashboard.esi.lessee.nodes.delete-leases')
+      .module('horizon.dashboard.esi.delete-leases')
       .controller('DeleteLeasesWizardController', DeleteLeasesWizardController);
   
     DeleteLeasesWizardController.$inject = [
       '$scope',
-      'horizon.dashboard.esi.lessee.nodes.delete-leases.workflow',
+      'horizon.dashboard.esi.delete-leases.workflow',
     ];
   
     function DeleteLeasesWizardController($scope, deleteLeasesWorkflow) {

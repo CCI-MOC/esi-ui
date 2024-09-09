@@ -2,11 +2,11 @@
     'use strict';
   
     angular
-      .module('horizon.dashboard.esi.lessee.nodes.delete-leases')
-      .factory('horizon.dashboard.esi.lessee.nodes.delete-leases.workflow', deleteLeasesWorkflow);
+      .module('horizon.dashboard.esi.delete-leases')
+      .factory('horizon.dashboard.esi.delete-leases.workflow', deleteLeasesWorkflow);
   
     deleteLeasesWorkflow.$inject = [
-      'horizon.dashboard.esi.lessee.nodes.delete-leases.basePath',
+      'horizon.dashboard.esi.delete-leases.basePath',
       'horizon.app.core.workflow.factory'
     ];
   

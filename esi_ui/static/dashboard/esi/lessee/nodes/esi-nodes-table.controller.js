@@ -15,7 +15,7 @@
     'horizon.dashboard.esi.lessee.nodes.manage-floating-ips.modal.service',
     'horizon.dashboard.esi.lessee.nodes.provisioning.modal.service',
     'horizon.dashboard.esi.lessee.nodes.unprovisioning.modal.service',
-    'horizon.dashboard.esi.lessee.nodes.delete-leases.modal.service',
+    'horizon.dashboard.esi.delete-leases.modal.service',
     'horizon.framework.widgets.toast.service',
     'horizon.framework.widgets.modal-wait-spinner.service',
     'horizon.app.core.openstack-service-api.keystone',

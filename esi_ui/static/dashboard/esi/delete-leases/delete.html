@@ -8,7 +8,7 @@
          translate>There are no leases on this node.</div>
     <select id="leases"
             class="form-control"
-            ng-if="node.leases.length !== 0"
+            ng-show="node.leases.length !== 0"
             ng-options="lease.uuid + ' (' + lease.start_time + ' — ' + lease.end_time + ')' for lease in node.leases track by lease.uuid"
             ng-required="true"
             ng-model="stepModels.selectedLeases[node.uuid]">

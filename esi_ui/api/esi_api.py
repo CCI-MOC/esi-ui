@@ -213,6 +213,18 @@ def offer_claim(request, offer):
     return esiclient(token=token).claim_offer(offer, **times)
 
 
+def create_lease(request):
+    token = request.user.token.id
+    lease_params = json.loads(request.body.decode('utf-8'))
+
+    if lease_params['start_time'] is None:
+        del lease_params['start_time']
+    if lease_params['end_time'] is None:
+        del lease_params['end_time']
+        
+    return esiclient(token=token).lease.create_lease(lease_params)
+
+
 def delete_lease(request, lease):
     token = request.user.token.id
 

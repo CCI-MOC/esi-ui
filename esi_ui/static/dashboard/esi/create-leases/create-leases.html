@@ -1,0 +1,42 @@
+<p class="step-description" translate>Please provide time a period to claim</p>
+
+<div class="form-group">
+  <label class="control-label" translate for="start">Start Time (UTC)</label>
+  <br>
+  <input type="date" id="start" ng-model="stepModels.start_date" />
+  <input type="time" id="start" ng-required="stepModels.start_date" ng-model="stepModels.start_time" />
+  <span translate>Default: now</span>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="end">End Time (UTC)</label>
+  <br>
+  <input type="date" id="end" ng-model="stepModels.end_date" />
+  <input type="time" id="end" ng-required="stepModels.end_date" ng-model="stepModels.end_time" />
+  <span translate>Default: offer end time</span>
+</div>
+
+<div class="form-group">
+  <label class="control-label" translate for="project">Lessee Project</label>
+  <br>
+  <input class="form-control"
+         type="text"
+         id="project"
+         ng-model="stepModels.project"
+         ng-required="true">
+  <!--
+  <div class="alert alert-warning"
+       ng-if="model.loaded.projects && model.projects.length === 0"
+       translate>
+    There are no projects
+  </div>
+  <select id="project"
+          class="form-control"
+          ng-show="model.projects.length !== 0"
+          ng-options="project.uuid as project.name for project in model.projects"
+          ng-required="true"
+          ng-model="stepModels.project"
+      <option value=""></option>
+  </select>
+  -->
+</div>

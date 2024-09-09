@@ -1,1 +1,166 @@
-hello world
+<div ng-controller="horizon.dashboard.esi.owner.leases.EsiLeasesTableController as ctrl">
+  <hz-magic-search-context filter-facets="ctrl.filterFacets">
+    <div hz-table
+      track-rows-by="ctrl.config.trackId"
+      ng-cloak
+      st-magic-search
+      st-table="ctrl.nodesDisplay"
+      st-safe-src="ctrl.nodesSrc"
+      class="hz-magic-search-context">
+
+      <div class="row">
+        <div class="hz-dynamic-table-preamble col-xs-12">
+          <hz-magic-search-bar class="hz-magic-search-bar" ng-if="ctrl.filterFacets"></hz-magic-search-bar>
+          <action-list>
+            <button class="btn btn-default"
+                    ng-class="actionClasses"
+                    ng-disabled="tCtrl.selected.length === 0"
+                    ng-click="ctrl.createLease(tCtrl.selected);
+                              $event.stopPropagation();">
+              {$ ::'Create Leases' | translate $}
+            </button>
+          </action-list>
+          <action-list>
+            <button class="btn btn-danger"
+                    ng-class="actionClasses"
+                    ng-disabled="tCtrl.selected.length === 0"
+                    ng-click="ctrl.deleteLease(tCtrl.selected);
+                              $event.stopPropagation();">
+              <span class="fa fa-trash"></span>
+              {$ ::'Delete Leases' | translate $}
+            </button>
+          </action-list>
+        </div>
+      </div>
+
+      <table class="table table-striped table-rsp table-detail">
+        <thead>
+          <tr>
+            <!--
+              This is where we display number of items and pagination controls in
+              the header.
+            -->
+            <td hz-table-footer colspan="100" items="ctrl.nodesDisplay"></td>
+          </tr>
+          <tr>
+            <!--
+              Table-column-headers:
+              Set selectAll to True if you want to enable select all checkbox.
+              Set expand to True if you want to inline details.
+            -->
+            <th ng-show="ctrl.config.selectAll" class="multi_select_column">
+              <div class="themable-checkbox">
+                <input type="checkbox" id="esi-nodes-table-select-all" hz-select-all="ctrl.nodesDisplay">
+                <label for="esi-nodes-table-select-all"></label>
+              </div>
+            </th>
+            <th ng-show="ctrl.config.expand" class="expander"></th>
+            <th ng-repeat="column in ctrl.config.columns"
+              class="rsp-p{$ column.priority $}"
+              st-sort="{$ column.id $}"
+              ng-attr-st-sort-default="{$ column.sortDefault $}"
+              translate>
+              {$ column.title $}
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!--
+            Table-rows:
+            classes rsp-p1 rsp-p2 are responsive priority as user resizes window.
+          -->
+          <tr ng-repeat-start="node in ctrl.nodesDisplay track by node[ctrl.config.trackId]">
+            <td ng-show="ctrl.config.selectAll" class="multi_select_column">
+              <div class="themable-checkbox">
+                <input type="checkbox"
+                      id="{$ node[ctrl.config.trackId] $}"
+                      ng-model="tCtrl.selections[node[ctrl.config.trackId]].checked"
+                      hz-select="node">
+                <label for="{$ node[ctrl.config.trackId] $}"></label>
+              </div>
+            </td>
+            <td ng-show="ctrl.config.expand" class="expander">
+              <span class="fa fa-chevron-right"
+                hz-expand-detail
+                duration="200">
+              </span>
+            </td>
+            <td class="rsp-p2">{$ node.name $}</td>
+            <td class="rsp-p2">{$ node.resource_class $}</td>
+            <td class="rsp-p2">{$ node.maintenance $}</td>
+            <td class="rsp-p2">{$ node.leases[0].project $}</td>
+            <td class="rps-p2">{$ node.leases[0].start_time + " — " + node.leases[0].end_time $}</dt>
+            <td class="actions_column">
+              <action-list uib-dropdown>
+                <button class="split-caret dropdown-toggle btn btn-default toggle"
+                        uib-dropdown-toggle
+                        ng-class="actionClasses"
+                        aria-expanded="false"
+                        ng-click="$event.stopPropagation()"
+                        aria-haspopup="true">
+                  <span class="fa fa-caret-down"></span>
+                  {$ ::'Actions' | translate $}
+                </button>
+                <menu>
+                  <li role="presentation">
+                    <a role="menuitem"
+                       ng-click="ctrl.createLease([node]);
+                                 $event.stopPropagation();
+                                 $event.preventDefault()">
+                      {$ ::'Create Lease' | translate $}
+                    </a>
+                  </li>
+                  <li role="presentation">
+                    <a class="text-danger"
+                      role="menuitem"
+                      ng-click="ctrl.deleteLease([node]);
+                                $event.stopPropagation();
+                                $event.preventDefault()">
+                      <span class="fa fa-trash"></span>
+                      {$ ::'Delete Lease' | translate $}
+                    </a>
+                  </li>
+                </menu>
+              </action-list>
+            </td>
+          </tr>
+
+          <!--
+            Detail-row:
+            Contains detailed information on this item.
+            Can be toggled using the chevron button.
+            Ensure colspan is greater or equal to number of column-headers.
+          -->
+          <tr ng-if="ctrl.config.expand" ng-repeat-end class="detail-row">
+            <td class="detail" colspan="100">
+              <h4>{$ ::'Current & Future Leases' | translate $}</h4>
+              <div class="row">
+                <div class="table-rsp">
+                  <dl class="col-sm-3" ng-repeat="column in ctrl.config.lease_details" style="width: fit-content">
+                    <dt>{$ column.title $}</dt>
+                    <dd ng-repeat="lease in node.leases track by $index">
+                      <b ng-if="$index === 0">{$ lease[column.id] $}</b>
+                      <span ng-if="$index !== 0">{$ lease[column.id] $}</span>
+                    </dd>
+                  </dl>
+                  <dl>
+                    <dt translate>Properties</dt>
+                    <dd ng-repeat="prop in node.properties">{$ prop[0] $}: {$ prop[1] $}</dd>
+                  </dl>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+
+        <!--
+          Table-footer:
+          This is where we display number of items and pagination controls.
+        -->
+        <tfoot hz-table-footer items="ctrl.nodesDisplay"></tfoot>
+      </table>
+    </div>
+  </hz-magic-search-context>
+</div>

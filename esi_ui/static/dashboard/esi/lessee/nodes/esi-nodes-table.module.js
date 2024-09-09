@@ -7,7 +7,7 @@
       'horizon.dashboard.esi.lessee.nodes.manage-floating-ips',
       'horizon.dashboard.esi.lessee.nodes.provisioning',
       'horizon.dashboard.esi.lessee.nodes.unprovisioning',
-      'horizon.dashboard.esi.lessee.nodes.delete-leases'
+      'horizon.dashboard.esi.delete-leases',
     ])
     .config(config);
 

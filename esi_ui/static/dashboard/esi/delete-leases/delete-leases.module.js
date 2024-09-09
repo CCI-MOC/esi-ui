@@ -2,9 +2,9 @@
     'use strict';
 
     angular
-        .module('horizon.dashboard.esi.lessee.nodes.delete-leases', [])
+        .module('horizon.dashboard.esi.delete-leases', [])
         .config(config)
-        .constant('horizon.dashboard.esi.lessee.nodes.delete-leases.modal-spec', {
+        .constant('horizon.dashboard.esi.delete-leases.modal-spec', {
             backdrop: 'static',
             size: 'lg',
             controller: 'ModalContainerController',
@@ -17,8 +17,8 @@
     ];
 
     function config($provide, $windowProvider) {
-        var basePath = $windowProvider.$get().STATIC_URL + 'dashboard/esi/lessee/nodes/delete-leases/';
-        $provide.constant('horizon.dashboard.esi.lessee.nodes.delete-leases.basePath', basePath);
+        var basePath = $windowProvider.$get().STATIC_URL + 'dashboard/esi/delete-leases/';
+        $provide.constant('horizon.dashboard.esi.delete-leases.basePath', basePath);
     }
 
 })();

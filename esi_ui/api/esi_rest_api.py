@@ -106,9 +106,19 @@ class Offer(generic.View):
 
 
 @urls.register
+class Leases(generic.View):
+
+    url_regex = r'esi/leases/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def post(self, request):
+        return esi_api.create_lease(request)
+
+
+@urls.register
 class Lease(generic.View):
 
-    url_regex = r'esi/lease/(?P<lease>{})$'.format(LOGICAL_NAME_PATTERN)
+    url_regex = r'esi/leases/(?P<lease>{})$'.format(LOGICAL_NAME_PATTERN)
 
     @rest_utils.ajax()
     def delete(self, request, lease):
