@@ -98,7 +98,14 @@
             </span>
           </td>
           <td class="rsp-p2">{$ node.name $}</td>
-          <td class="rsp-p2">{$ node.provision_state + (node.target_provision_state ? " → " + node.target_provision_state : "") $}</td>
+          <td class="rsp-p2">
+            <div class="progress-text horizon-loading-bar">
+              <div class="progress progress-striped active" ng-if="node.is_operation_initiated && node.target_provision_state !== null">
+                <div class="progress-bar"></div>
+              </div>
+              {$ node.provision_state + (node.target_provision_state ? " → " + node.target_provision_state : "") $}
+            </div>
+          </td>
           <td class="rsp-p2">
             <div class="progress-text horizon-loading-bar" ng-if="node.target_power_state !== ''">
               <div class="progress progress-striped active" ng-if="node.target_power_state !== null">
