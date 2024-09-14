@@ -25,7 +25,7 @@ def get_session_from_request(request):
     region = config.get_cloud_region(load_yaml_config=False,
                                      load_envvars=False,
                                      auth_type='token',
-                                     token=token,
+                                     token=request.user.token.id,
                                      auth_url=auth_url)
     user_session = region.get_session()
     if not user_session.auth.get_access(user_session).project_scoped:
