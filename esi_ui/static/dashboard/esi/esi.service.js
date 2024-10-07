@@ -15,6 +15,7 @@
     var service = {
       nodeList: nodeList,
       setPowerState: setPowerState,
+      createLease: createLease,
       deleteLease: deleteLease,
       provision: provision,
       unprovision: unprovision,
@@ -45,8 +46,15 @@
       });
     }
 
+    function createLease(lease_params) {
+      return apiService.post('/api/esi/leases/', lease_params).catch(err => {
+        toastService.add('error', 'Unable to create lease(s). ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      });
+    }
+
     function deleteLease(lease_uuid) {
-      return apiService.delete('/api/esi/lease/' + lease_uuid).catch(err => {
+      return apiService.delete('/api/esi/leases/' + lease_uuid).catch(err => {
         toastService.add('error', 'Unable to delete lease(s). ' + (err.data ? err.data : ''))
         return Promise.reject(err);
       });

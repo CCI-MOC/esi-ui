@@ -140,10 +140,9 @@ def node_list(request):
 
 
 def deploy_node(request, node):
-    token = request.user.token.id
     kwargs = json.loads(request.body.decode('utf-8'))
 
-    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+    provisioner = _provisioner.Provisioner(session=get_session_from_request(request))
     
     if 'ssh_keys' in kwargs:
         kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
@@ -153,8 +152,7 @@ def deploy_node(request, node):
 
 
 def undeploy_node(request, node):
-    token = request.user.token.id
-    provisioner = _provisioner.Provisioner(session=get_session_from_token(token))
+    provisioner = _provisioner.Provisioner(session=get_session_from_request(request))
 
     provisioner.unprovision_node(node, wait=None)
 
@@ -215,6 +213,19 @@ def offer_claim(request, offer):
         del times['end_time']
 
     return esiclient(request).claim_offer(offer, **times)
+
+
+def create_lease(request):
+    lease_params = json.loads(request.body.decode('utf-8'))
+
+    if lease_params['start_time'] is None:
+        del lease_params['start_time']
+    if lease_params['end_time'] is None:
+        del lease_params['end_time']
+
+    print(lease_params)
+        
+    return esiclient(request).lease.create_lease(**lease_params)
 
 
 def delete_lease(request, lease):
