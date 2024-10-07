@@ -99,6 +99,10 @@ class Offers(generic.View):
             'offers': offers
         }
 
+    @rest_utils.ajax(data_required=True)
+    def post(self, request):
+        return esi_api.create_offer(request)
+
 
 @urls.register
 class Offer(generic.View):
@@ -108,6 +112,20 @@ class Offer(generic.View):
     @rest_utils.ajax(data_required=True)
     def put(self, request, offer):
         return esi_api.offer_claim(request, offer)
+
+    @rest_utils.ajax()
+    def delete(self, request, offer):
+        return esi_api.delete_offer(request, offer)
+
+
+@urls.register
+class Leases(generic.View):
+
+    url_regex = r'esi/leases/$'.format(LOGICAL_NAME_PATTERN)
+
+    @rest_utils.ajax()
+    def post(self, request):
+        return esi_api.create_lease(request)
 
 
 @urls.register

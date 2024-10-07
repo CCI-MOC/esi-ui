@@ -191,6 +191,7 @@ def offer_list(request):
 
     return [
         {
+            'project': offer.project,
             'resource': offer.resource,
             'resource_class': offer.resource_class,
             'status': offer.status,
@@ -202,6 +203,25 @@ def offer_list(request):
         }
         for offer in offers
     ]
+
+
+def create_offer(request):
+    offer_params = json.loads(request.body.decode('utf-8'))
+
+    if offer_params['start_time'] is None:
+        del offer_params['start_time']
+    else:
+        print(offer_params['start_time'])
+    if offer_params['end_time'] is None:
+        del offer_params['end_time']
+    else:
+        print(offer_params['end_time'])
+        
+    return esiclient(request).lease.create_offer(**offer_params)
+
+
+def delete_offer(request, offer):
+    return esiclient(request).lease.delete_offer(offer)
 
 
 def offer_claim(request, offer):
@@ -222,8 +242,6 @@ def create_lease(request):
         del lease_params['start_time']
     if lease_params['end_time'] is None:
         del lease_params['end_time']
-
-    print(lease_params)
         
     return esiclient(request).lease.create_lease(**lease_params)
 
