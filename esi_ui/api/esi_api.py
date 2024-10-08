@@ -1,7 +1,9 @@
+import asyncio
+from websockets.asyncio.server import serve
+from threading import Thread
 import json
 import concurrent.futures
 from collections import defaultdict
-import itertools
 
 from django.conf import settings
 
@@ -10,7 +12,6 @@ from keystoneauth1.identity.v3 import token as v3_token
 from metalsmith import _provisioner
 from metalsmith import instance_config
 from openstack import config
-from horizon.utils.memoized import memoized  # noqa
 
 from esi import connection
 from esi.lib import nodes
@@ -18,32 +19,38 @@ from esi.lib import nodes
 
 DEFAULT_OPENSTACK_KEYSTONE_URL = 'http://127.0.0.1/identity/v3'
 
+DEFAULT_WEBSOCKET_PORT = 10000
 
-@memoized
-def get_session_from_request(request):
+
+def get_session(token, project_id):
     auth_url = getattr(settings, 'OPENSTACK_KEYSTONE_URL', DEFAULT_OPENSTACK_KEYSTONE_URL)
     region = config.get_cloud_region(load_yaml_config=False,
                                      load_envvars=False,
                                      auth_type='token',
-                                     token=request.user.token.id,
+                                     token=token,
                                      auth_url=auth_url)
     user_session = region.get_session()
     if not user_session.auth.get_access(user_session).project_scoped:
        auth = v3_token.Token(
            auth_url=auth_url,
            token=user_session.get_token(),
-           project_id=request.user.project_id)
+           project_id=project_id)
        user_session = session.Session(auth=auth)
     return user_session
 
 
-@memoized
-def esiclient(request):
-    return connection.ESIConnection(session=get_session_from_request(request))
+def esiclient(request, from_websocket=False):
+    if from_websocket:
+        token = request['token']
+        project_id = request['project_id']
+    else:
+        token = request.user.token.id
+        project_id = request.user.project_id
+    return connection.ESIConnection(session=get_session(token, project_id))
 
 
-def node_list(request):
-    connection = esiclient(request)
+def node_list(request, from_websocket=False):
+    connection = esiclient(request, from_websocket)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         f1 = executor.submit(connection.lease.nodes)
@@ -142,7 +149,7 @@ def node_list(request):
 def deploy_node(request, node):
     kwargs = json.loads(request.body.decode('utf-8'))
 
-    provisioner = _provisioner.Provisioner(session=get_session_from_request(request))
+    provisioner = _provisioner.Provisioner(session=get_session(request.user.token.id, request.user.project_id))
     
     if 'ssh_keys' in kwargs:
         kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
@@ -152,7 +159,7 @@ def deploy_node(request, node):
 
 
 def undeploy_node(request, node):
-    provisioner = _provisioner.Provisioner(session=get_session_from_request(request))
+    provisioner = _provisioner.Provisioner(session=get_session(request.user.token.id, request.user.project_id))
 
     provisioner.unprovision_node(node, wait=None)
 
@@ -242,9 +249,28 @@ def create_lease(request):
         del lease_params['start_time']
     if lease_params['end_time'] is None:
         del lease_params['end_time']
-        
+
     return esiclient(request).lease.create_lease(**lease_params)
 
 
 def delete_lease(request, lease):
     return esiclient(request).lease.delete_lease(lease)
+
+
+async def on_websocket_connect(websocket):
+    token = await websocket.recv(decode=True)
+    project_id = await websocket.recv(decode=True)
+    request = {"token": token, "project_id": project_id}
+
+    while True:
+        list_of_nodes = node_list(request, from_websocket=True) 
+        await websocket.send(json.dumps(list_of_nodes))
+        await asyncio.sleep(10)
+
+
+async def websocket_listen():
+    async with serve(on_websocket_connect, 'localhost', getattr(settings, 'DEFAULT_WEBSOCKET_PORT', DEFAULT_WEBSOCKET_PORT)):
+        await asyncio.get_running_loop().create_future()
+
+
+Thread(target=asyncio.run, args=(websocket_listen(),)).start()

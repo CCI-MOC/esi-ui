@@ -8,11 +8,49 @@
   esiService.$inject = [
     'horizon.framework.util.http.service',
     'horizon.framework.widgets.toast.service',
+    'horizon.app.core.openstack-service-api.keystone',
     'horizon.app.core.openstack-service-api.network',
   ];
   
-  function esiService(apiService, toastService, networkAPI) {
+  function esiService(apiService, toastService, keystoneAPI, networkAPI) {
+    var stack = [];
+    var onmessageDefer;
+    var socket = {
+      socket: new WebSocket('ws://127.0.0.1:10000'),
+      send: function(data) {
+        data = JSON.stringify(data);
+        if (socket.socket.readyState === WebSocket.OPEN) {
+          socket.socket.send(data);
+        } else {
+          stack.push(data);
+        }
+      },
+      onmessage: function(callback) {
+        if (socket.socket.readyState === WebSocket.OPEN) {
+          socket.socket.onmessage = callback;
+        } else {
+          onmessageDefer = callback;
+        }
+      },
+    };
+    socket.socket.onopen = function() {
+      for (const i in stack) {
+        socket.socket.send(stack[i]);
+      }
+      stack = [];
+      if (onmessageDefer) {
+        socket.socket.onmessage = onmessageDefer;
+        onmessageDefer = null;
+      }
+    };
+
+    keystoneAPI.getCurrentUserSession().then(function(response) {
+      socket.send(response.data.token);
+      socket.send(response.data.project_id);
+    });
+
     var service = {
+      socket: function() { return socket; },
       nodeList: nodeList,
       setPowerState: setPowerState,
       createLease: createLease,
