@@ -6,6 +6,7 @@
     .controller('horizon.dashboard.esi.lessee.nodes.EsiNodesTableController', controller);
 
   controller.$inject = [
+    '$scope',
     '$q',
     '$timeout',
     'horizon.app.core.openstack-service-api.esiService',
@@ -58,7 +59,7 @@
     'rescue'
   ]);
 
-  function controller($q, $timeout, esiService, config,
+  function controller($scope, $q, $timeout, esiService, config,
                       filterFacets, manageNetworksModalService,
                       manageFloatingIPsModalService, provisioningModalService,
                       unprovisioningModalService, deleteLeasesModalService,
@@ -80,42 +81,22 @@
 
     ////////////////
 
-    spinnerService.showModalSpinner('Getting nodes');
     init();
 
     function init() {
-      var promises = [keystoneAPI.getCurrentUserSession(), esiService.nodeList()];
-      return $q.all(promises)
-      .then(function(responses) {
-        ctrl.project_name = responses[0].data.project_name;
-        ctrl.nodesSrc = responses[1].data.nodes.filter(function(node) {
-          return node.leases.length === 0
-                 || node.leases[0].project === ctrl.project_name
-                 || (node.owner === ctrl.project_name && node.leases[0].status === 'created');
+      keystoneAPI.getCurrentUserSession().then(function(response) {
+        ctrl.project_name = response.data.project_name;
+      });
+
+      esiService.socket().onmessage(function(message) {
+        $scope.$apply(function() {
+          ctrl.nodesSrc = JSON.parse(message.data);
+          ctrl.nodesDisplay = ctrl.nodesSrc.filter(function(node) {
+            return node.leases.length === 0
+                   || node.leases[0].project === ctrl.project_name
+                   || (node.owner === ctrl.project_name && node.leases[0].status === 'created');
+          });
         });
-        ctrl.nodesDisplay = ctrl.nodesSrc;
-        console.log(ctrl.nodesSrc);
-
-        var in_provision_transition = false;
-        ctrl.nodesSrc.forEach(function(node) {
-          node.network_operation = null; 
-          if (PROVISION_ERROR_STATES.has(node.provision_state)) {
-            return;
-          }
-
-          if (PROVISION_STABLE_STATES.has(node.target_provision_state)) {
-            in_provision_transition = true;
-          }
-        });
-
-        if (in_provision_transition) {
-          $timeout(init, REFRESH_RATE);
-        }
-
-        spinnerService.hideModalSpinner();
-      })
-      .catch(function(response) {
-        spinnerService.hideModalSpinner();
       });
     }
 
