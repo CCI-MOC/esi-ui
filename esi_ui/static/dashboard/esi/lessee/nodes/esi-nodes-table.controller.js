@@ -176,7 +176,11 @@
     }
 
     function provision(nodes) {
-      provisioningModalService.open()
+      var launchContext = {
+        nodes: nodes
+      };
+
+      provisioningModalService.open(launchContext)
         .then(function(provision_params) {
           angular.forEach(nodes, function(node) {
             node.is_operation_initiated = true;

@@ -13,17 +13,19 @@
     'horizon.app.core.openstack-service-api.nova',
   ];
 
-  function provisioningModel(glanceAPI, neutronAPI, novaAPI) {
+  function provisioningModel(glanceAPI, neutronAPI, novaAPI, networkAPI) {
     var model = {
       loaded: {
         images: false,
         networks: false,
-        keypairs: false
+        keypairs: false,
+        floatingIPs: false
       },
 
       images: [],
       networks: [],
       keypairs: [],
+      floatingIPs: [],
 
       initialize: initialize,
       submit: submit
@@ -37,18 +39,36 @@
       glanceAPI.getImages().then(onGetImages, noop);
       neutronAPI.getNetworks().then(onGetNetworks, noop);
       novaAPI.getKeypairs().then(onGetKeypairs, noop);
+      networkAPI.getFloatingIps().then(onGetFloatingIPs, noop);
     }
 
     function submit(stepModels) {
-      if (stepModels.keypair) {
+      if (stepModels.sshOption === 'existing' && stepModels.keypair) {
         stepModels.ssh_keys = [stepModels.keypair.trim()];
         delete stepModels.keypair;
       }
+    
+      if (stepModels.sshOption === 'upload' && model.uploadedKeyFile) {
+        stepModels.ssh_keys = [model.uploadedKeyFile];
+        delete model.uploadedKeyFile;
+      }
+
+      if (stepModels.sshOption === 'none') {
+        delete stepModels.ssh_keys;
+      }
+    
       if (stepModels.network) {
-        stepModels.nics = [{network: stepModels.network}];
+        stepModels.nics = [{ network: stepModels.network }];
         delete stepModels.network;
       }
 
+      if (stepModels.floatingIP) {
+        stepModels.floating_ips = [stepModels.floatingIP];
+        delete stepModels.floatingIP;
+      }
+
+      delete stepModels.sshOption;
+      
       return Promise.resolve(stepModels);
     }
 
@@ -65,6 +85,13 @@
     function onGetKeypairs(response) {
       model.keypairs = response.data.items;
       model.loaded.keypairs = true;
+    }
+
+    function onGetFloatingIPs(response) {
+      model.floatingIPs = response.data.items.filter(function(ip) {
+        return !ip.port_id;
+      });
+      model.loaded.floatingIPs = true;
     }
   }
 
