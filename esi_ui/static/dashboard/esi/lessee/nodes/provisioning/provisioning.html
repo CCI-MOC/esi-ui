@@ -39,21 +39,97 @@
   </select>
 </div>
 
+
 <div class="form-group">
+  <label class="control-label" translate for="floating_ip_option">Floating IP</label>
+  <div ng-if="launchContext.nodes.length === 1">
+    <div class="form-inline">
+      <label class="radio-inline">
+        <input type="radio" ng-model="stepModels.floatingIPOption" value="none" required> None
+      </label>
+      <label class="radio-inline">
+        <input type="radio" ng-model="stepModels.floatingIPOption" value="attach" required> Attach Existing Floating IP
+      </label>
+    </div>
+
+    <div class="form-group" ng-show="stepModels.floatingIPOption === 'attach'">
+      <label class="control-label" translate for="floating_ip_list">Select a Floating IP</label>
+      
+      <div class="horizon-loading-bar" ng-if="!model.loaded.floatingIPs">
+        <div class="progress progress-striped active">
+          <div class="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning" ng-if="model.loaded.floatingIPs && model.floatingIPs.length === 0">
+        No available floating IPs
+      </div>
+
+      <select id="floating_ip_list"
+              class="form-control"
+              ng-if="model.loaded.floatingIPs && model.floatingIPs.length !== 0"
+              ng-options="ip.floating_ip_address as ip.floating_ip_address for ip in model.floatingIPs"
+              ng-required="stepModels.floatingIPOption === 'attach'"
+              ng-model="stepModels.selectedFloatingIP">
+        <option value="">Select a Floating IP</option>
+      </select>
+    </div>
+  </div>
+
+  <div ng-if="launchContext.nodes.length > 1">
+    <p class="alert alert-info">
+      Floating IP attachment is not available when multiple nodes are selected.
+    </p>
+  </div>
+</div>
+
+
+<div class="form-group">
+  <label class="control-label" translate>SSH Key Options</label>
+  <div class="form-inline">
+    <label class="radio-inline">
+      <input type="radio" ng-model="stepModels.sshOption" value="existing" required> Use Existing SSH Key
+    </label>
+    <label class="radio-inline">
+      <input type="radio" ng-model="stepModels.sshOption" value="upload" required> Upload New SSH Key
+    </label>
+    <label class="radio-inline">
+      <input type="radio" ng-model="stepModels.sshOption" value="none" required> Do Not Use SSH Key
+    </label>
+  </div>
+</div>
+<div class="form-group" ng-show="stepModels.sshOption === 'existing'">
   <label class="control-label" translate for="keypair_name">SSH Keys</label>
+  
   <div class="horizon-loading-bar" ng-if="!model.loaded.keypairs">
     <div class="progress progress-striped active">
       <div class="progress-bar"></div>
     </div>
   </div>
+
   <div class="alert alert-warning"
       ng-if="model.loaded.keypairs && model.keypairs.length === 0"
       translate>There are no keypairs</div>
+  
   <select id="keypair_name"
           class="form-control"
           ng-if="model.loaded.keypairs && model.keypairs.length !== 0"
           ng-options="keypair.keypair.public_key as keypair.keypair.name for keypair in model.keypairs"
-          ng-model="stepModels.keypair">
-    <option value=""></option>
+          ng-model="stepModels.keypair"
+          ng-required="stepModels.sshOption === 'existing'">
+    <option value="">Select a keypair</option>
   </select>
+  <div class="ng-hide">
+    <input type="text" ng-model="stepModels.keypair" ng-required="stepModels.sshOption === 'existing' && model.loaded.keypairs && model.keypairs.length === 0">
+  </div>
+</div>
+
+<div class="form-group" ng-show="stepModels.sshOption === 'upload'">
+  <label class="control-label" translate>Upload New SSH Key</label>
+  <input type="file"
+         class="form-control"
+         ng-required="stepModels.sshOption === 'upload'" 
+         file-input
+         ng-model="stepModels.uploadedKeyFile"
+         id="uploadedKeyFile">
 </div>

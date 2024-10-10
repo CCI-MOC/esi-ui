@@ -13,7 +13,7 @@ from openstack import config
 from horizon.utils.memoized import memoized  # noqa
 
 from esi import connection
-from esi.lib import nodes
+from esi.lib import nodes, networks
 
 
 DEFAULT_OPENSTACK_KEYSTONE_URL = 'http://127.0.0.1/identity/v3'
@@ -147,6 +147,23 @@ def deploy_node(request, node):
     if 'ssh_keys' in kwargs:
         kwargs['config'] = instance_config.GenericConfig(ssh_keys=kwargs['ssh_keys'])
         del kwargs['ssh_keys']
+    
+    network_id = kwargs['nics'][0]['network']
+    
+    if kwargs['floatingIPOption'] == 'none':
+        kwargs['nics'] = [{'network': network_id}]
+    else:
+        connection = esiclient(request)
+        ironic_node = connection.baremetal.get_node(node)
+        port = networks.create_port(connection, ironic_node.name, connection.network.get_network(network_id))
+        kwargs['nics'] = [{'port': port.id}]
+        floating_ip_address = kwargs['selectedFloatingIP']
+        floating_ip = connection.network.find_ip(floating_ip_address)
+        connection.network.update_ip(floating_ip, port_id=port.id)
+
+    del kwargs['floatingIPOption']
+    if 'selectedFloatingIP' in kwargs:
+        del kwargs['selectedFloatingIP']
 
     provisioner.provision_node(node, **kwargs)
 
