@@ -25,6 +25,8 @@
       floatingIPDetach: floatingIPDetach,
       offerList: offerList,
       offerClaim: offerClaim,
+      createOffer: createOffer,
+      deleteOffer: deleteOffer,
     };
     return service;
 
@@ -125,6 +127,20 @@
       console.log(times);
       return apiService.put('/api/esi/offers/' + offer.uuid, times).catch(err => {
         toastService.add('error', 'Unable to claim an offer. ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      });
+    }
+
+    function createOffer(offer_params) {
+      return apiService.post('/api/esi/offers/', offer_params).catch(err => {
+        toastService.add('error', 'Unable to create offer(s). ' + (err.data ? err.data : ''))
+        return Promise.reject(err);
+      });
+    }
+
+    function deleteOffer(offer_uuid) {
+      return apiService.delete('/api/esi/offers/' + offer_uuid).catch(err => {
+        toastService.add('error', 'Unable to delete offer(s). ' + (err.data ? err.data : ''))
         return Promise.reject(err);
       });
     }
