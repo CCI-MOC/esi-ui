@@ -81,6 +81,7 @@
 
     ////////////////
 
+    spinnerService.showModalSpinner('Getting Nodes');
     init();
 
     function init() {
@@ -89,6 +90,7 @@
       });
 
       esiService.socket().onmessage(function(message) {
+        spinnerService.hideModalSpinner();
         $scope.$apply(function() {
           ctrl.nodesSrc = JSON.parse(message.data);
           ctrl.nodesDisplay = ctrl.nodesSrc.filter(function(node) {

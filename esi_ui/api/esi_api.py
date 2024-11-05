@@ -1,9 +1,11 @@
 import asyncio
 from websockets.asyncio.server import serve
+from websockets.exceptions import ConnectionClosed
 from threading import Thread
 import json
 import concurrent.futures
 from collections import defaultdict
+import ssl
 
 from django.conf import settings
 
@@ -20,6 +22,8 @@ from esi.lib import nodes
 DEFAULT_OPENSTACK_KEYSTONE_URL = 'http://127.0.0.1/identity/v3'
 
 DEFAULT_WEBSOCKET_PORT = 10000
+
+DEFAULT_POLL_INTERVAL_SECONDS = 10
 
 
 def get_session(token, project_id):
@@ -257,20 +261,31 @@ def delete_lease(request, lease):
     return esiclient(request).lease.delete_lease(lease)
 
 
-async def on_websocket_connect(websocket):
-    token = await websocket.recv(decode=True)
-    project_id = await websocket.recv(decode=True)
-    request = {"token": token, "project_id": project_id}
+async def websocket_listen(ssl_context):
+    async def on_websocket_connect(websocket):
+        try:
+            token = await websocket.recv(decode=True)
+            project_id = await websocket.recv(decode=True)
+            
+        except ConnectionClosed:
+            return
+        request = {"token": token, "project_id": project_id}
 
-    while True:
-        list_of_nodes = node_list(request, from_websocket=True) 
-        await websocket.send(json.dumps(list_of_nodes))
-        await asyncio.sleep(10)
+        while True:
+            list_of_nodes = node_list(request, from_websocket=True) 
 
+            try:
+                await websocket.send(json.dumps(list_of_nodes))
+            except ConnectionClosed:
+                break
 
-async def websocket_listen():
-    async with serve(on_websocket_connect, 'localhost', getattr(settings, 'DEFAULT_WEBSOCKET_PORT', DEFAULT_WEBSOCKET_PORT)):
+            await asyncio.sleep(getattr(settings, 'DEFAULT_POLL_INTERVAL_SECONDS', DEFAULT_POLL_INTERVAL_SECONDS))
+
+    async with serve(on_websocket_connect, '0.0.0.0', getattr(settings, 'DEFAULT_WEBSOCKET_PORT', DEFAULT_WEBSOCKET_PORT), ssl=ssl_context):
         await asyncio.get_running_loop().create_future()
 
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+ssl_context.load_cert_chain(settings.SSL_CERTIFICATE_PATH, keyfile=settings.SSL_KEY_PATH)
+ssl_context.load_verify_locations(cafile=settings.SSL_CERTIFICATE_PATH)
 
-Thread(target=asyncio.run, args=(websocket_listen(),)).start()
+Thread(target=asyncio.run, args=(websocket_listen(ssl_context),)).start()

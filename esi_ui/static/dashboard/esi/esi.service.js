@@ -16,7 +16,7 @@
     var stack = [];
     var onmessageDefer;
     var socket = {
-      socket: new WebSocket('ws://127.0.0.1:10000'),
+      socket: new WebSocket('wss://' + window.location.hostname + ':10000'),
       send: function(data) {
         data = JSON.stringify(data);
         if (socket.socket.readyState === WebSocket.OPEN) {
