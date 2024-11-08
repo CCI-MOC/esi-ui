@@ -99,13 +99,14 @@
           </td>
           <td class="rsp-p2">{$ node.name $}</td>
           <td class="rsp-p2">
-            <div class="progress-text horizon-loading-bar">
+            <div class="progress-text horizon-loading-bar" 
+                 ng-style="{'color': ctrl.getProvisionStateColor(node.provision_state, node.target_provision_state)}">
               <div class="progress progress-striped active" ng-if="node.is_operation_initiated && node.target_provision_state !== null">
                 <div class="progress-bar"></div>
               </div>
-              {$ node.provision_state + (node.target_provision_state ? " → " + node.target_provision_state : "") $}
+              {$ node.provision_state $}<span ng-if="node.target_provision_state"> → {$ node.target_provision_state $}</span>
             </div>
-          </td>
+          </td>   
           <td class="rsp-p2">
             <div class="progress-text horizon-loading-bar" ng-if="node.target_power_state !== ''">
               <div class="progress progress-striped active" ng-if="node.target_power_state !== null">
@@ -114,10 +115,16 @@
               {$ node.power_state + (node.target_power_state ? " → " + node.target_power_state : "") $}
             </div>
           </td>
-          <td class="rsp-p2">{$ node.maintenance $}</td>
+          <td class="rsp-p2" ng-style="{'color': ctrl.getMaintenanceColor(node.maintenance)}">
+            {$ node.maintenance $}
+          </td>  
           <td class="rsp-p2">{$ node.resource_class $}</td>
           <td class="rsp-p2">
-            <span ng-if="node.owner !== ctrl.project_name" ng-repeat="lease in node.leases">
+            <span 
+              ng-if="node.owner !== ctrl.project_name" 
+              ng-repeat="lease in node.leases" 
+              ng-style="{'color': ctrl.getLeaseColor(lease.end_time)}" 
+              ng-init="console.log('getLeaseColor called for', lease.end_time, 'color:', ctrl.getLeaseColor(lease.end_time))">
               <b ng-if="$first && node.leases[1]" translate>{$ lease.start_time + " — " + lease.end_time $}</b>
               <span ng-if="!$first || !node.leases[1]" translate>{$ lease.start_time + " — " + lease.end_time $}</span>
               <br>
@@ -125,7 +132,7 @@
             <span ng-if="node.owner === ctrl.project_name">
               <b translate>Owned</b>
             </span>
-          </td>
+          </td>  
           <td class="actions_column">
             <action-list uib-dropdown>
               <button class="split-caret dropdown-toggle btn btn-default toggle"

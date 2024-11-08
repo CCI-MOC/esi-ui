@@ -77,6 +77,10 @@
     ctrl.unprovision = unprovision;
     ctrl.manageNodeNetworks = manageNodeNetworks;
     ctrl.manageFloatingIPs = manageFloatingIPs;
+    ctrl.getLeaseColor = getLeaseColor;
+    ctrl.getProvisionStateColor = getProvisionStateColor;
+    ctrl.getMaintenanceColor = getMaintenanceColor;
+
 
     ////////////////
 
@@ -363,6 +367,35 @@
           });
         }
       });
+    }
+    function getLeaseColor(endDate) {
+      const now = new Date();
+      const end = new Date(endDate);
+      const diff = end - now;
+    
+      if (diff <= 7 * 24 * 60 * 60 * 1000) {
+        return 'red';
+      } else if (diff <= 30 * 24 * 60 * 60 * 1000) { 
+        return 'orange';
+      } else {
+        return 'green';
+      }
+    }
+
+    function getProvisionStateColor(provisionState, targetProvisionState) {
+      if (targetProvisionState) {
+        return 'blue';
+      }
+      if (PROVISION_ERROR_STATES.has(provisionState)) {
+        return 'red'; 
+      }
+      if (PROVISION_STABLE_STATES.has(provisionState)) {
+        return provisionState === 'active' ? 'green' : 'blue';
+      }
+      return 'black';
+    }
+    function getMaintenanceColor(maintenanceStatus) {
+      return maintenanceStatus === 'True' ? 'red' : 'green';
     }
   }
 
