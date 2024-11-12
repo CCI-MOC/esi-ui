@@ -50,6 +50,9 @@
       <label class="radio-inline">
         <input type="radio" ng-model="stepModels.floatingIPOption" value="attach" required> Attach Existing Floating IP
       </label>
+      <label class="radio-inline">
+        <input type="radio" ng-model="stepModels.floatingIPOption" value="create" required> Create New Floating IP
+      </label>
     </div>
 
     <div class="form-group" ng-show="stepModels.floatingIPOption === 'attach'">

@@ -41,6 +41,18 @@ Finally, restart your server using one of the commands based on your environment
 
 Read more about general plugin installation: https://docs.openstack.org/horizon/latest/contributor/tutorials/plugin.html#installing-your-plugin
 
+Configuration
+-------------
+
+**ESI_EXTERNAL_NETWORK**
+
+To enable automatic floating IP creation, set `ESI_EXTERNAL_NETWORK` to the UUID of your external network. This is required for provisioning in environments where floating IP is created.
+
+Example::
+
+    # In local_settings.py
+    ESI_EXTERNAL_NETWORK = "<YOUR_EXTERNAL_NETWORK_UUID>"
+
 Structure
 ---------
 

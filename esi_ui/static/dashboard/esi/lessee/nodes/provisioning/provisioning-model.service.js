@@ -83,9 +83,12 @@
         delete stepModels.network;
       }
     
-      if (stepModels.floatingIP) {
-        stepModels.floating_ips = [stepModels.floatingIP];
-        delete stepModels.floatingIP;
+      if (stepModels.floatingIPOption === 'attach' && stepModels.selectedFloatingIP) {
+        stepModels.selectedFloatingIP = stepModels.selectedFloatingIP;
+      }
+    
+      if (stepModels.floatingIPOption === 'create') {
+        stepModels.floatingIPOption = 'create';
       }
 
       delete stepModels.sshOption;
@@ -109,7 +112,7 @@
 
     function onGetFloatingIPs(response) {
       model.floatingIPs = response.data.items.filter(function(ip) {
-        return !ip.port_id;
+        return ip.status === 'DOWN';
       });
       model.loaded.floatingIPs = true;
     }
