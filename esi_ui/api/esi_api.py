@@ -157,9 +157,16 @@ def deploy_node(request, node):
         ironic_node = connection.baremetal.get_node(node)
         port = networks.create_port(connection, ironic_node.name, connection.network.get_network(network_id))
         kwargs['nics'] = [{'port': port.id}]
-        floating_ip_address = kwargs['selectedFloatingIP']
-        floating_ip = connection.network.find_ip(floating_ip_address)
-        connection.network.update_ip(floating_ip, port_id=port.id)
+
+        floating_ip_option = kwargs.get('floatingIPOption')
+        if floating_ip_option == 'attach':
+            floating_ip_address = kwargs['selectedFloatingIP']
+            floating_ip = connection.network.find_ip(floating_ip_address)
+            connection.network.update_ip(floating_ip, port_id=port.id)
+        elif floating_ip_option == 'create':
+            external_network_id = settings.ESI_EXTERNAL_NETWORK
+            floating_ip = connection.network.create_ip(floating_network_id=external_network_id)
+            connection.network.update_ip(floating_ip, port_id=port.id)
 
     del kwargs['floatingIPOption']
     if 'selectedFloatingIP' in kwargs:
