@@ -24,6 +24,9 @@
     ctrl.offersSrc = [];
 
     ctrl.offerClaim = offerClaim;
+    ctrl.getOfferStatusColor = getOfferStatusColor;
+    ctrl.getOfferAvailabilityColor = getOfferAvailabilityColor;
+
 
     ////////////////
 
@@ -69,6 +72,20 @@
         });
       });
     }
+
+    function getOfferStatusColor(status) {
+      return status === 'available' ? 'green' : 'red';
+    }
+  
+    function getOfferAvailabilityColor(availabilityStart) {
+      const currentTime = new Date(); 
+      const availabilityDateTime = new Date(availabilityStart.replace(" ", "T") + "Z");
+      
+      const timeDifference = (availabilityDateTime - currentTime) / 60000;
+  
+      return timeDifference <= 0 ? 'green' : 'brown';
+    } 
+    
   }
 
 })();
