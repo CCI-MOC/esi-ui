@@ -80,13 +80,16 @@
           </td>
           <td class="rsp-p2">{$ offer.resource $}</td>
           <td class="rsp-p2">{$ offer.resource_class $}</td>
-          <td class="rsp-p2">{$ offer.status $}</td>
+          <td class="rsp-p2" ng-style="{'color': ctrl.getOfferStatusColor(offer.status)}">
+            {$ offer.status $}
+          </td>
           <td class="rsp-p2">{$ offer.start_time $}</td>
           <td class="rsp-p2">{$ offer.end_time $}</td>
           <td class="rsp-p2">
-            <span ng-repeat="avail in offer.availabilities">
-              {$ avail[0] $} — {$ avail[1] $}
-              <br>
+            <span ng-repeat="avail in offer.availabilities" 
+                  ng-style="{'color': ctrl.getOfferAvailabilityColor(avail[0])}">
+                {$ avail[0] $} — {$ avail[1] $}
+                <br>
             </span>
           </td>
           <td class="actions_column">
