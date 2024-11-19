@@ -150,27 +150,28 @@ def deploy_node(request, node):
     
     network_id = kwargs['nics'][0]['network']
     
-    if kwargs['floatingIPOption'] == 'none':
-        kwargs['nics'] = [{'network': network_id}]
-    else:
-        connection = esiclient(request)
-        ironic_node = connection.baremetal.get_node(node)
-        port = networks.create_port(connection, ironic_node.name, connection.network.get_network(network_id))
-        kwargs['nics'] = [{'port': port.id}]
+    if 'floatingIPOption' in kwargs:
+        floating_ip_option = kwargs['floatingIPOption']
+        if floating_ip_option == 'none':
+            kwargs['nics'] = [{'network': network_id}]
+        elif floating_ip_option:
+            connection = esiclient(request)
+            ironic_node = connection.baremetal.get_node(node)
+            port = networks.create_port(connection, ironic_node.name, connection.network.get_network(network_id))
+            kwargs['nics'] = [{'port': port.id}]
 
-        floating_ip_option = kwargs.get('floatingIPOption')
-        if floating_ip_option == 'attach':
-            floating_ip_address = kwargs['selectedFloatingIP']
-            floating_ip = connection.network.find_ip(floating_ip_address)
-            connection.network.update_ip(floating_ip, port_id=port.id)
-        elif floating_ip_option == 'create':
-            external_network_id = settings.ESI_EXTERNAL_NETWORK
-            floating_ip = connection.network.create_ip(floating_network_id=external_network_id)
-            connection.network.update_ip(floating_ip, port_id=port.id)
+            if floating_ip_option == 'attach':
+                floating_ip_address = kwargs['selectedFloatingIP']
+                floating_ip = connection.network.find_ip(floating_ip_address)
+                connection.network.update_ip(floating_ip, port_id=port.id)
+            elif floating_ip_option == 'create':
+                external_network_id = settings.ESI_EXTERNAL_NETWORK
+                floating_ip = connection.network.create_ip(floating_network_id=external_network_id)
+                connection.network.update_ip(floating_ip, port_id=port.id)
 
-    del kwargs['floatingIPOption']
-    if 'selectedFloatingIP' in kwargs:
-        del kwargs['selectedFloatingIP']
+        del kwargs['floatingIPOption']
+        if 'selectedFloatingIP' in kwargs:
+            del kwargs['selectedFloatingIP']
 
     provisioner.provision_node(node, **kwargs)
 
