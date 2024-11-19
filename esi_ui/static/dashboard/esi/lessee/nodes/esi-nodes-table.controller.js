@@ -155,16 +155,16 @@
         const leasesToDelete = response.selectedLeases;
         spinnerService.showModalSpinner('Canceling Lease(s)');
 
-        var promises = [];
-        angular.forEach(nodes, function(node) {
-          promises.push(esiService.deleteLease(leasesToDelete[node.uuid].id)
-          .then(function(response) {
-            if (node.leases.length == 1) {
-              var i = ctrl.nodesSrc.indexOf(node);
-              if (i !== -1)
-                ctrl.nodesSrc.splice(i, 1);
-            }
-          }));
+        var promises = nodes.map(node => {
+          const leaseId = leasesToDelete[node.uuid].uuid;
+       
+          return esiService.deleteLease(leaseId)
+          .then(function() {
+           if (node.leases.length === 1) {
+            var i = ctrl.nodesSrc.indexOf(node);
+            if (i !== -1) ctrl.nodesSrc.splice(i, 1);
+           }
+          });
         });
 
         $q.all(promises)
