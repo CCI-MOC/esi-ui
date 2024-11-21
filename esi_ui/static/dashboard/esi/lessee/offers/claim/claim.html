@@ -1,17 +1,17 @@
 <p class="step-description" translate>Please provide time a period to claim</p>
 
 <div class="form-group">
-  <label class="control-label" translate for="start">Start Time (UTC)</label>
+  <label class="control-label" for="start">Start Time (UTC)</label>
   <br>
-  <input type="date" id="start" ng-model="stepModels.start_date" />
-  <input type="time" id="start" ng-required="stepModels.start_date" ng-model="stepModels.start_time" />
-  <span translate>Default: now</span>
+  <input type="date" id="start-date" ng-model="stepModels.start_date" ng-value="defaultStart.date | date:'yyyy-MM-dd'" required />
+  <input type="time" id="start-time" ng-model="stepModels.start_time" ng-value="defaultStart.time" required />
+  <span>Default: now</span>
 </div>
 
 <div class="form-group">
-  <label class="control-label" translate for="end">End Time (UTC)</label>
+  <label class="control-label" for="end">End Time (UTC)</label>
   <br>
-  <input type="date" id="end" ng-model="stepModels.end_date" />
-  <input type="time" id="end" ng-required="stepModels.end_date" ng-model="stepModels.end_time" />
-  <span translate>Default: offer end time</span>
+  <input type="date" id="end-date" ng-model="stepModels.end_date" ng-value="defaultEnd.date | date:'yyyy-MM-dd'" required />
+  <input type="time" id="end-time" ng-model="stepModels.end_time" ng-value="defaultEnd.time" required />
+  <span>Default: offer end time</span>
 </div>
